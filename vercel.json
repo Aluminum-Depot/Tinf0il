@@ -1,0 +1,26 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/bare", "destination": "/api/bare" },
+    { "source": "/bare/:path*", "destination": "/api/bare" }
+  ],
+  "headers": [
+    {
+      "source": "/uv/(.*)",
+      "headers": [
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/bare.js": {
+      "maxDuration": 60
+    }
+  }
+}
