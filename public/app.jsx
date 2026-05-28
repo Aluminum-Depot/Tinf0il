@@ -1480,6 +1480,12 @@ const App = () => {
     document.title = titles[page] || 'tinf0il';
   }, [page]);
 
+  useEffect(() => {
+    if (typeof gtag !== 'function') return;
+    const path = page === 'home' ? '/' : `/${page}`;
+    gtag('event', 'page_view', { page_path: path, page_title: document.title });
+  }, [page]);
+
   const voice = VOICE_PRESETS[tweaks.voice] || VOICE_PRESETS.punchy;
   const handleSignOut = () => window.fbAuth?.signOut().catch(() => {});
   const handleAccountClick = () => user ? navigate('settings') : setShowAuth(true);
