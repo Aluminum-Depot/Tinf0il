@@ -13,6 +13,7 @@ const SportsPlayer = ({ id }) => {
   const [streamIndex, setStreamIndex] = useState(0)
   const [copied, setCopied] = useState(false)
   const [embedDomain, setEmbedDomain] = useState(DEFAULT_EMBED_DOMAIN)
+  const [isIOS, setIsIOS] = useState(false)
 
   const handleShare = async () => {
     try {
@@ -21,6 +22,17 @@ const SportsPlayer = ({ id }) => {
       setTimeout(() => setCopied(false), 2000)
     } catch {}
   }
+
+  // iOS (iPhone/iPad) — incl. Chrome/Firefox on iOS, which are all WebKit —
+  // can't play these embeds: the providers use MSE/hls.js with origin-locked
+  // HLS, which iOS native playback rejects. Detect it to show a clear notice
+  // instead of the provider's cryptic player error.
+  useEffect(() => {
+    const ua = navigator.userAgent || ""
+    const iOS = /iPhone|iPad|iPod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) // iPadOS 13+
+    setIsIOS(iOS)
+  }, [])
 
   // Resolve the currently-live embed mirror so streams keep working when a
   // domain's DNS dies (see lib/sportsConfig.js). Falls back to the default.
@@ -61,7 +73,16 @@ const SportsPlayer = ({ id }) => {
   return (
     <div className="w-full flex flex-col gap-2">
       <div className="bg-[#22212c] rounded-md p-2 !pb-0">
-        {embedUrl ? (
+        {isIOS ? (
+          <div className="aspect-video w-full bg-[#1a1929] rounded-sm flex flex-col items-center justify-center text-center gap-3 px-6">
+            <span className="text-4xl">📱</span>
+            <span className="text-slate-200 text-base font-medium">Live streams don't play on iPhone or iPad</span>
+            <span className="text-slate-400 text-sm max-w-md leading-relaxed">
+              Apple's mobile browsers (including Chrome and Firefox on iOS) can't play these streams.
+              Please open this page on a computer, or on an Android device, to watch.
+            </span>
+          </div>
+        ) : embedUrl ? (
           <iframe
             key={embedUrl}
             src={embedUrl}
@@ -79,7 +100,7 @@ const SportsPlayer = ({ id }) => {
           </div>
         )}
 
-        {sources.length > 0 && (
+        {!isIOS && sources.length > 0 && (
           <div className="bg-[#323044] w-full px-4 py-2 mt-2 flex items-center gap-6 flex-wrap">
             {sources.map((src, si) => (
               <div key={si} className="flex items-center gap-2">
@@ -99,10 +120,12 @@ const SportsPlayer = ({ id }) => {
           </div>
         )}
 
-        <div className="bg-[#2a2838] px-4 py-2 flex items-center gap-2 text-amber-400/80 text-xs mb-2">
-          <span>⚠</span>
-          <span>If the stream shows an error, try a different stream number above.</span>
-        </div>
+        {!isIOS && (
+          <div className="bg-[#2a2838] px-4 py-2 flex items-center gap-2 text-amber-400/80 text-xs mb-2">
+            <span>⚠</span>
+            <span>If the stream shows an error, try a different stream number above.</span>
+          </div>
+        )}
       </div>
 
       <div className="bg-[#22212c] rounded-md px-6 py-5 flex items-start justify-between gap-4">
