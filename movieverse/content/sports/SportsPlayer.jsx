@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { getNtvsEvents, buildEmbedUrls, formatEventDate } from "@/lib/ntvsApi"
+import { DEFAULT_EMBED_DOMAIN } from "@/lib/sportsConfig"
 
 const SportsPlayer = ({ id }) => {
   const [event, setEvent] = useState(null)
@@ -11,6 +12,7 @@ const SportsPlayer = ({ id }) => {
   const [sourceIndex, setSourceIndex] = useState(0)
   const [streamIndex, setStreamIndex] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [embedDomain, setEmbedDomain] = useState(DEFAULT_EMBED_DOMAIN)
 
   const handleShare = async () => {
     try {
@@ -19,6 +21,15 @@ const SportsPlayer = ({ id }) => {
       setTimeout(() => setCopied(false), 2000)
     } catch {}
   }
+
+  // Resolve the currently-live embed mirror so streams keep working when a
+  // domain's DNS dies (see lib/sportsConfig.js). Falls back to the default.
+  useEffect(() => {
+    fetch("/tv/api/sports/embed-domain")
+      .then(res => res.json())
+      .then(data => { if (data?.domain) setEmbedDomain(data.domain) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     getNtvsEvents()
@@ -43,7 +54,7 @@ const SportsPlayer = ({ id }) => {
     </div>
   )
 
-  const sources = buildEmbedUrls(event)
+  const sources = buildEmbedUrls(event, embedDomain)
   const activeSource = sources[sourceIndex]
   const embedUrl = activeSource?.urls[streamIndex]
 

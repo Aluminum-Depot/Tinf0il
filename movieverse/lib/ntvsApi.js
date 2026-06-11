@@ -1,3 +1,5 @@
+import { DEFAULT_EMBED_DOMAIN } from "./sportsConfig"
+
 // Set NEXT_PUBLIC_SPORTS_RELAY to a Cloudflare Worker URL to bypass server IP blocks.
 // Worker code: https://github.com/Aluminum-Depot/Tinf0il#sports-relay
 const RELAY = process.env.NEXT_PUBLIC_SPORTS_RELAY
@@ -44,7 +46,7 @@ export async function getNtvsEvents() {
   return { live, nonLive }
 }
 
-export function buildEmbedUrls(event) {
+export function buildEmbedUrls(event, embedDomain = DEFAULT_EMBED_DOMAIN) {
   const results = []
 
   for (const s of event.sources || []) {
@@ -52,7 +54,7 @@ export function buildEmbedUrls(event) {
       results.push({
         label: "Stream",
         type: "iframe",
-        urls: [1, 2, 3].map(n => `https://embedsports.top/embed/admin/${s.id}/${n}`),
+        urls: [1, 2, 3].map(n => `https://${embedDomain}/embed/admin/${s.id}/${n}`),
       })
     } else if (s.source === "echo") {
       // echo source IDs don't map predictably to pooembed slugs —
