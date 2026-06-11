@@ -5,6 +5,14 @@ import Link from "next/link"
 import { getNtvsEvents, buildEmbedUrls, formatEventDate } from "@/lib/ntvsApi"
 import { DEFAULT_EMBED_DOMAIN } from "@/lib/sportsConfig"
 
+// iPhone/iPad — including Chrome/Firefox on iOS, which are all WebKit underneath.
+function detectIOS() {
+  if (typeof navigator === "undefined") return false
+  const ua = navigator.userAgent || ""
+  return /iPhone|iPad|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) // iPadOS 13+
+}
+
 const SportsPlayer = ({ id }) => {
   const [event, setEvent] = useState(null)
   const [error, setError] = useState(null)
@@ -14,6 +22,7 @@ const SportsPlayer = ({ id }) => {
   const [copied, setCopied] = useState(false)
   const [embedDomain, setEmbedDomain] = useState(DEFAULT_EMBED_DOMAIN)
   const [isIOS, setIsIOS] = useState(false)
+  const [altUrl, setAltUrl] = useState(null)
 
   const handleShare = async () => {
     try {
@@ -23,15 +32,11 @@ const SportsPlayer = ({ id }) => {
     } catch {}
   }
 
-  // iOS (iPhone/iPad) — incl. Chrome/Firefox on iOS, which are all WebKit —
-  // can't play these embeds: the providers use MSE/hls.js with origin-locked
-  // HLS, which iOS native playback rejects. Detect it to show a clear notice
-  // instead of the provider's cryptic player error.
+  // The main "Stream" embeds (embedstreams.top) use MSE/hls.js with origin-locked
+  // HLS, which iOS WebKit rejects — so on iOS we steer users to the Alt Stream
+  // (ntvs.cx's own player) and show a notice if they pick a main stream instead.
   useEffect(() => {
-    const ua = navigator.userAgent || ""
-    const iOS = /iPhone|iPad|iPod/.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) // iPadOS 13+
-    setIsIOS(iOS)
+    setIsIOS(detectIOS())
   }, [])
 
   // Resolve the currently-live embed mirror so streams keep working when a
@@ -49,11 +54,28 @@ const SportsPlayer = ({ id }) => {
         const all = [...live, ...nonLive]
         const found = all.find(e => String(e.id) === String(id))
         setEvent(found || null)
-        if (!found) setError(`Event ID "${id}" not in API response (${all.length} events loaded)`)
+        if (!found) {
+          setError(`Event ID "${id}" not in API response (${all.length} events loaded)`)
+          return
+        }
+        // On iOS the main streams don't play, so default to the Alt Stream.
+        if (detectIOS()) {
+          const altIdx = buildEmbedUrls(found).findIndex(s => s.label === "Alt Stream")
+          if (altIdx >= 0) { setSourceIndex(altIdx); setStreamIndex(0) }
+        }
       })
       .catch(e => setError(e?.message || "Failed to load events"))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Resolve the clean full-frame Alt Stream player (see /api/sports/alt-embed).
+  useEffect(() => {
+    if (!event) return
+    fetch(`/tv/api/sports/alt-embed?id=${encodeURIComponent(event.id)}`)
+      .then(res => res.json())
+      .then(data => { if (data?.url) setAltUrl(data.url) })
+      .catch(() => {})
+  }, [event])
 
   if (loading) return <div className="aspect-video w-full bg-[#22212c] rounded-md animate-pulse" />
 
@@ -66,20 +88,23 @@ const SportsPlayer = ({ id }) => {
     </div>
   )
 
-  const sources = buildEmbedUrls(event, embedDomain)
+  const sources = buildEmbedUrls(event, embedDomain, altUrl)
   const activeSource = sources[sourceIndex]
   const embedUrl = activeSource?.urls[streamIndex]
+  const isAltStream = activeSource?.label === "Alt Stream"
+  // Only the main streams are unsupported on iOS; the Alt Stream may still play.
+  const showIOSNotice = isIOS && !isAltStream
 
   return (
     <div className="w-full flex flex-col gap-2">
       <div className="bg-[#22212c] rounded-md p-2 !pb-0">
-        {isIOS ? (
+        {showIOSNotice ? (
           <div className="aspect-video w-full bg-[#1a1929] rounded-sm flex flex-col items-center justify-center text-center gap-3 px-6">
             <span className="text-4xl">📱</span>
-            <span className="text-slate-200 text-base font-medium">Live streams don't play on iPhone or iPad</span>
+            <span className="text-slate-200 text-base font-medium">Stream 1–3 don't play on iPhone or iPad</span>
             <span className="text-slate-400 text-sm max-w-md leading-relaxed">
-              Apple's mobile browsers (including Chrome and Firefox on iOS) can't play these streams.
-              Please open this page on a computer, or on an Android device, to watch.
+              Apple's mobile browsers can't play these streams. Try <span className="text-slate-200 font-medium">Alt Stream</span> below,
+              or open this page on a computer or Android device.
             </span>
           </div>
         ) : embedUrl ? (
@@ -100,7 +125,7 @@ const SportsPlayer = ({ id }) => {
           </div>
         )}
 
-        {!isIOS && sources.length > 0 && (
+        {sources.length > 0 && (
           <div className="bg-[#323044] w-full px-4 py-2 mt-2 flex items-center gap-6 flex-wrap">
             {sources.map((src, si) => (
               <div key={si} className="flex items-center gap-2">
@@ -120,12 +145,14 @@ const SportsPlayer = ({ id }) => {
           </div>
         )}
 
-        {!isIOS && (
-          <div className="bg-[#2a2838] px-4 py-2 flex items-center gap-2 text-amber-400/80 text-xs mb-2">
-            <span>⚠</span>
-            <span>If the stream shows an error, try a different stream number above.</span>
-          </div>
-        )}
+        <div className="bg-[#2a2838] px-4 py-2 flex items-center gap-2 text-amber-400/80 text-xs mb-2">
+          <span>⚠</span>
+          <span>
+            {isIOS
+              ? "On iPhone/iPad, use Alt Stream — Stream 1–3 aren't supported."
+              : "If the stream shows an error, try a different stream number above."}
+          </span>
+        </div>
       </div>
 
       <div className="bg-[#22212c] rounded-md px-6 py-5 flex items-start justify-between gap-4">

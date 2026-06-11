@@ -46,7 +46,7 @@ export async function getNtvsEvents() {
   return { live, nonLive }
 }
 
-export function buildEmbedUrls(event, embedDomain = DEFAULT_EMBED_DOMAIN) {
+export function buildEmbedUrls(event, embedDomain = DEFAULT_EMBED_DOMAIN, altUrl = null) {
   const results = []
 
   for (const s of event.sources || []) {
@@ -57,12 +57,13 @@ export function buildEmbedUrls(event, embedDomain = DEFAULT_EMBED_DOMAIN) {
         urls: [1, 2, 3].map(n => `https://${embedDomain}/embed/admin/${s.id}/${n}`),
       })
     } else if (s.source === "echo") {
-      // echo source IDs don't map predictably to pooembed slugs —
-      // embed the ntvs.cx watch page directly instead (no X-Frame-Options)
+      // Prefer the clean full-frame player extracted via /api/sports/alt-embed
+      // (no site header, scrollable on mobile). Fall back to the whole ntvs.cx
+      // watch page if the token couldn't be resolved.
       results.push({
         label: "Alt Stream",
         type: "iframe",
-        urls: [`https://ntvs.cx/watch/kobra/${event.id}`],
+        urls: [altUrl || `https://ntvs.cx/watch/kobra/${event.id}`],
       })
     }
   }
