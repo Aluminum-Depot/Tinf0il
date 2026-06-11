@@ -978,7 +978,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
           <div className="panel">
             <span className="panel-tag">// tab cloak</span>
             <h3>cloak</h3>
-            <p className="h-sub">pick a classroom tab, or paste any site — we&apos;ll pull title and icon.</p>
+            <p className="h-sub">on by default (disguised as Classroom). pick another tab, or paste any site — we&apos;ll pull title and icon.</p>
 
             <div className="cloak-browser-mock">
               <div className="cloak-tab-strip" role="tablist" aria-label="cloak preset">
@@ -1066,9 +1066,9 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 setCloakAddressHost(classroom.host);
                 setImportUrl('');
                 setImportErr('');
-                document.title = 'tinf0il · home';
+                document.title = classroom.title;
                 const fav = document.querySelector("link[rel='icon']");
-                if (fav) fav.href = '/assets/foil.png';
+                if (fav) fav.href = classroom.icon;
               }}>reset</button>
             </div>
           </div>
