@@ -5,9 +5,9 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB6_jbjIoS1Vu4Er3FadpMmEnFXEcD9yuo",
-  authDomain: "tinf0il-b75b1.firebaseapp.com",
-  projectId: "tinf0il-b75b1",
-  storageBucket: "tinf0il-b75b1.firebasestorage.app",
+  authDomain: "1mmun3-b75b1.firebaseapp.com",
+  projectId: "1mmun3-b75b1",
+  storageBucket: "1mmun3-b75b1.firebasestorage.app",
   messagingSenderId: "12175261060",
   appId: "1:12175261060:web:1ff4e080311327382971d1",
   measurementId: "G-6JZC2CJP4Y"

@@ -1,7 +1,7 @@
 import SportsList from "@/content/sports/SportsList"
 
 export const metadata = {
-  title: "Live Sports — tinf0il TV",
+  title: "Live Sports — 1MMUN3 TV",
   description: "Watch live sports streams. Auto-updating.",
 }
 

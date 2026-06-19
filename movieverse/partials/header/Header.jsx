@@ -16,8 +16,8 @@ const Header = () => {
 
           <Link href={"/"} className={`${styles.brand} flex items-center gap-2`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/foil.png" alt="tinf0il" width={32} height={32} className={styles.brandLogo} />
-            <span className={styles.brandName}>tinf<em>0</em>il <span className={styles.brandSub}>TV</span></span>
+            <img src="/foil.png" alt="1MMUN3" width={32} height={32} className={styles.brandLogo} />
+            <span className={styles.brandName}>1<em>MMUN</em>3 <span className={styles.brandSub}>TV</span></span>
           </Link>
 
           {/* links */}

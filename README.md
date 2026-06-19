@@ -1,4 +1,4 @@
-# tinf0il
+# 1MMUN3
 
 A clean, fast proxy portal built on [Scramjet](https://github.com/MercuryWorkshop/scramjet) with libcurl transport. Browse, play, stream, and work — privately.
 
@@ -17,7 +17,7 @@ A clean, fast proxy portal built on [Scramjet](https://github.com/MercuryWorksho
 - **App catalog** — curated list of web apps, one tap to launch
 - **Favorites** — pin games and apps for quick access
 
-### tinf0il TV (`/tv`)
+### 1MMUN3 TV (`/tv`)
 A full-featured streaming interface built on Next.js, embedded in the portal.
 
 **Movies & TV Shows**

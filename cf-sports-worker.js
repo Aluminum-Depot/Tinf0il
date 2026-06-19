@@ -1,4 +1,4 @@
-// Cloudflare Worker — sports relay for tinf0il TV
+// Cloudflare Worker — sports relay for 1MMUN3 TV
 // Deploy at: https://workers.cloudflare.com
 // After deploying, set NEXT_PUBLIC_SPORTS_RELAY=<your-worker-url> in Heroku config vars.
 

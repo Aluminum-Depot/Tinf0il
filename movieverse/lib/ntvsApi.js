@@ -1,7 +1,7 @@
 import { DEFAULT_EMBED_DOMAIN } from "./sportsConfig"
 
 // Set NEXT_PUBLIC_SPORTS_RELAY to a Cloudflare Worker URL to bypass server IP blocks.
-// Worker code: https://github.com/Aluminum-Depot/Tinf0il#sports-relay
+// Worker code: https://github.com/Aluminum-Depot/OneMMUN3#sports-relay
 const RELAY = process.env.NEXT_PUBLIC_SPORTS_RELAY
 
 async function fetchNtvsData() {

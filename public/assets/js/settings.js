@@ -18,9 +18,9 @@
     favicon.href = icon;
   }
 
-  window.Tinf0ilSettings = {
+  window.OneMMUN3Settings = {
     save({ title: nextTitle, icon: nextIcon, theme: nextTheme, cloakPreset: nextPreset, cloakHost: nextHost }) {
-      localStorage.setItem("websiteTitle", nextTitle || "Tinf0il");
+      localStorage.setItem("websiteTitle", nextTitle || "1MMUN3");
       localStorage.setItem("websiteIcon", nextIcon || "/favicon.ico");
       localStorage.setItem("theme", nextTheme || "midnight");
       if (nextPreset) localStorage.setItem("websiteCloakPreset", nextPreset);

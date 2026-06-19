@@ -244,7 +244,7 @@ async function proxyTvAppRequest(req, res) {
 		res.end(buf);
 	} catch (e) {
 		clearTimeout(timeout);
-		const msg = e?.name === "AbortError" ? "tinf0il TV timed out" : "tinf0il TV is not running";
+		const msg = e?.name === "AbortError" ? "1MMUN3 TV timed out" : "1MMUN3 TV is not running";
 		res.status(502).send(msg);
 	}
 }
@@ -288,7 +288,7 @@ async function isTvAppReachable() {
 async function ensureTvAppServer() {
 	if (!TV_APP_AUTOSTART || !["localhost", "127.0.0.1"].includes(TV_APP_URL.hostname)) return;
 	if (!hasTvAppInstalled()) {
-		console.warn("tinf0il TV: run `npm install` inside movieverse/ to enable /tv/.");
+		console.warn("1MMUN3 TV: run `npm install` inside movieverse/ to enable /tv/.");
 		return;
 	}
 	if (await isTvAppReachable()) return;
@@ -310,11 +310,11 @@ async function ensureTvAppServer() {
 	});
 	tvAppChild.on("exit", (code, signal) => {
 		if (code !== 0 && signal !== "SIGTERM") {
-			console.warn(`tinf0il TV stopped unexpectedly (${signal || code}).`);
+			console.warn(`1MMUN3 TV stopped unexpectedly (${signal || code}).`);
 		}
 		tvAppChild = null;
 	});
-	console.log(`tinf0il TV (Next.js ${hasBuild ? "prod" : "dev"}): ${TV_APP_ORIGIN}/tv/`);
+	console.log(`1MMUN3 TV (Next.js ${hasBuild ? "prod" : "dev"}): ${TV_APP_ORIGIN}/tv/`);
 }
 
 function stopTvAppServer() {
@@ -491,7 +491,7 @@ app.get("/api/tab-meta", async (req, res) => {
 			headers: {
 				Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
 				"User-Agent":
-					"Mozilla/5.0 (compatible; Tinf0ilTabMeta/1.0; +https://github.com/)",
+					"Mozilla/5.0 (compatible; OneMMUN3TabMeta/1.0; +https://github.com/)",
 			},
 		});
 		clearTimeout(t);
@@ -523,45 +523,45 @@ app.get("/api/tab-meta", async (req, res) => {
 
 const PAGE_META = {
 	home: {
-		title: "tinf0il · browse privately.",
+		title: "1MMUN3 · browse privately.",
 		description: "Bypass filters, play games, and route the web privately. Zero logs. No leaks. No ads.",
-		ogTitle: "tinf0il — the internet, unfiltered.",
+		ogTitle: "1MMUN3 — the internet, unfiltered.",
 		ogDescription: "A proxy portal that actually works. Games, apps, streaming — all routed privately. No logs. No leaks.",
 	},
 	games: {
-		title: "tinf0il · games, unfiltered.",
+		title: "1MMUN3 · games, unfiltered.",
 		description: "Hundreds of unblocked games, all proxied. No ads, no installs — just tap and play.",
-		ogTitle: "tinf0il Games — unblocked, unfiltered.",
+		ogTitle: "1MMUN3 Games — unblocked, unfiltered.",
 		ogDescription: "Hundreds of games, zero filters. No ads, no installs. Your school can't stop you now.",
 	},
 	apps: {
-		title: "tinf0il · apps, untangled.",
+		title: "1MMUN3 · apps, untangled.",
 		description: "Every web app you actually use, one tap away — all routed privately.",
-		ogTitle: "tinf0il Apps — untangled.",
+		ogTitle: "1MMUN3 Apps — untangled.",
 		ogDescription: "YouTube, Docs, everything you need — one tap away and fully proxied. No restrictions, no noise.",
 	},
 	tv: {
-		title: "tinf0il TV — stream anything.",
+		title: "1MMUN3 TV — stream anything.",
 		description: "Movies and shows, proxied and ad-free. No account. No paywall. Just watch.",
-		ogTitle: "tinf0il TV — stream anything, anywhere.",
-		ogDescription: "Movies and shows routed through tinf0il. No account. No paywall. No ads. Just hit play.",
+		ogTitle: "1MMUN3 TV — stream anything, anywhere.",
+		ogDescription: "Movies and shows routed through 1MMUN3. No account. No paywall. No ads. Just hit play.",
 	},
 	chatroom: {
-		title: "tinf0il · chatroom",
-		description: "Join the tinf0il community. Talk proxy, games, and everything in between.",
-		ogTitle: "tinf0il Chatroom — come hang.",
-		ogDescription: "The official tinf0il community. Proxy tips, game recs, and the whole vibe. Come through.",
+		title: "1MMUN3 · chatroom",
+		description: "Join the 1MMUN3 community. Talk proxy, games, and everything in between.",
+		ogTitle: "1MMUN3 Chatroom — come hang.",
+		ogDescription: "The official 1MMUN3 community. Proxy tips, game recs, and the whole vibe. Come through.",
 	},
 	settings: {
-		title: "tinf0il · settings",
-		description: "Cloak your tab, pick a theme, configure a panic key. Make tinf0il yours.",
-		ogTitle: "tinf0il Settings",
-		ogDescription: "Tab cloaking, custom themes, panic key, and more. Make tinf0il yours.",
+		title: "1MMUN3 · settings",
+		description: "Cloak your tab, pick a theme, configure a panic key. Make 1MMUN3 yours.",
+		ogTitle: "1MMUN3 Settings",
+		ogDescription: "Tab cloaking, custom themes, panic key, and more. Make 1MMUN3 yours.",
 	},
 	about: {
-		title: "tinf0il · about",
+		title: "1MMUN3 · about",
 		description: "A lightweight proxy portal built on scramjet. Browse, play, work — privately. No logs. No leaks.",
-		ogTitle: "about tinf0il",
+		ogTitle: "about 1MMUN3",
 		ogDescription: "Built on scramjet by Mercury Workshop. Zero trackers, zero logs, open source. The clean room the internet needed.",
 	},
 };
@@ -576,13 +576,13 @@ function getIndexHtml() {
 
 function buildMetaTags(page) {
 	const m = PAGE_META[page] || PAGE_META.home;
-	const origin = "https://tinf0il.site";
+	const origin = "https://1mmun3.site";
 	const image = `${origin}/assets/foil.png`;
 	return [
 		`<title>${m.title}</title>`,
 		`<meta name="description" content="${m.description}">`,
 		`<meta property="og:type" content="website">`,
-		`<meta property="og:site_name" content="tinf0il">`,
+		`<meta property="og:site_name" content="1MMUN3">`,
 		`<meta property="og:title" content="${m.ogTitle}">`,
 		`<meta property="og:description" content="${m.ogDescription}">`,
 		`<meta property="og:image" content="${image}">`,
@@ -671,7 +671,7 @@ if (boundPort === null) {
 	process.exit(1);
 }
 
-console.log(`Tinf0il UI + Scramjet: http://localhost:${boundPort}/`);
+console.log(`1MMUN3 UI + Scramjet: http://localhost:${boundPort}/`);
 if (!portLocked && boundPort !== preferredPort) {
 	console.log(`Note: preferred port ${preferredPort} was busy; using ${boundPort}.`);
 }

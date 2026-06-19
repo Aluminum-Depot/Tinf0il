@@ -7,8 +7,8 @@
 @tailwind utilities;
 
 :root {
-  --toastify-color-dark: #111116 !important;
-  --accent: #7eb8a4;
+  --toastify-color-dark: #0a0a0a !important;
+  --accent: #ffffff;
 }
 
 * {
@@ -18,9 +18,9 @@
 }
 
 body {
-  background: #0c0c0f;
+  background: #000000;
   scroll-behavior: smooth;
-  color: #d4d4dc;
+  color: #ffffff;
 }
 
 ::-webkit-scrollbar-track {
@@ -31,7 +31,7 @@ body {
   background-color: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: #1e1e24;
+  background-color: #333333;
   border-radius: 10px;
 }
 

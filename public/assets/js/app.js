@@ -1,5 +1,16 @@
 (function () {
-  const searchTemplate = "https://www.google.com/search?q=%s";
+  const searchEngines = {
+    duckduckgo: "https://duckduckgo.com/?q=%s",
+    google: "https://www.google.com/search?q=%s",
+    bing: "https://www.bing.com/search?q=%s",
+    startpage: "https://www.startpage.com/sp/search?query=%s",
+  };
+
+  function getSearchTemplate() {
+    const browser = localStorage.getItem('1MMUN3Browser') || 'duckduckgo';
+    return searchEngines[browser] || searchEngines.duckduckgo;
+  }
+
   const fallbackImage = "/addicon.png";
 
   function $(selector, root = document) {
@@ -21,10 +32,12 @@
         const url = new URL(`https://${value}`);
         if (url.hostname.includes(".")) return url.toString();
       } catch {
+        const searchTemplate = getSearchTemplate();
         return searchTemplate.replace("%s", encodeURIComponent(value));
       }
     }
 
+    const searchTemplate = getSearchTemplate();
     return searchTemplate.replace("%s", encodeURIComponent(value));
   }
 
@@ -35,7 +48,7 @@
     status.dataset.tone = tone;
   }
 
-  const LAUNCH_SIDEBAR_KEY = "tinf0ilLaunchSidebarCollapsed";
+  const LAUNCH_SIDEBAR_KEY = "1MMUN3LaunchSidebarCollapsed";
 
   function syncLaunchSidebarCollapsed(collapsed) {
     const grid = $("#browser-main-grid");
@@ -98,7 +111,7 @@
       return;
     }
 
-    tab.document.title = document.title || "Tinf0il";
+    tab.document.title = document.title || "1MMUN3";
     const iframe = tab.document.createElement("iframe");
     Object.assign(iframe.style, {
       border: "0",
@@ -121,7 +134,7 @@
 
     try {
       setStatus("Starting the proxy...", "good");
-      await window.Tinf0ilProxy.open(url);
+      await window.OneMMUN3Proxy.open(url);
     } catch (error) {
       setStatus(error.message || "Proxy could not launch.", "bad");
     }
@@ -164,7 +177,7 @@
       try {
         hideLaunchSidebar();
         setStatus("Loading…", "good");
-        await window.Tinf0ilProxy.frame(frame, url);
+        await window.OneMMUN3Proxy.frame(frame, url);
         input.value = url;
         const next = new URL(location.href);
         next.searchParams.delete("game");
@@ -287,10 +300,10 @@
       hideLaunchSidebar();
       const urlField = $("[data-browser-url]");
       if (urlField) urlField.value = directUrl;
-      document.title = `${directUrl.replace(/^https?:\/\//, "").slice(0, 48)} | Tinf0il`;
+      document.title = `${directUrl.replace(/^https?:\/\//, "").slice(0, 48)} | 1MMUN3`;
       try {
         setStatus("Connecting…", "good");
-        await window.Tinf0ilProxy.frame(frame, directUrl);
+        await window.OneMMUN3Proxy.frame(frame, directUrl);
         setStatus("", "neutral");
       } catch (error) {
         setStatus(error.message || "Launch failed.", "bad");
@@ -326,14 +339,14 @@
           ? new URL(item.url, location.origin).href
           : item.url;
     }
-    document.title = `${item.title} | Tinf0il`;
+    document.title = `${item.title} | 1MMUN3`;
 
     try {
       if (item.proxy === false || item.url.startsWith("/")) {
         frame.src = item.url;
       } else {
         setStatus("Connecting…", "good");
-        await window.Tinf0ilProxy.frame(frame, item.url);
+        await window.OneMMUN3Proxy.frame(frame, item.url);
       }
       setStatus("", "neutral");
     } catch (error) {
@@ -354,7 +367,7 @@
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      window.Tinf0ilSettings.save({
+      window.OneMMUN3Settings.save({
         title: $("#title-input").value.trim(),
         icon: $("#icon-input").value.trim(),
         theme: $("#theme-select").value,
@@ -364,7 +377,7 @@
     });
 
     $("[data-reset-settings]")?.addEventListener("click", () => {
-      window.Tinf0ilSettings.clear();
+      window.OneMMUN3Settings.clear();
       location.reload();
     });
   }
@@ -389,7 +402,7 @@
     loadEmbed();
   });
 
-  window.Tinf0il = {
+  window.OneMMUN3 = {
     launch,
     normalizeUrl,
     openBlank,

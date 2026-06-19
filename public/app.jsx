@@ -55,6 +55,13 @@ const CLOAK_PRESETS = [
   { id: 'classroom', short: 'Classroom', title: 'Classroom', icon: 'https://ssl.gstatic.com/classroom/favicon.png', host: 'classroom.google.com' },
 ];
 
+const BROWSER_OPTIONS = [
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com', icon: 'https://www.google.com/s2/favicons?domain=duckduckgo.com&sz=64' },
+  { id: 'google', name: 'Google', url: 'https://google.com', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=64' },
+  { id: 'bing', name: 'Bing', url: 'https://bing.com', icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=64' },
+  { id: 'startpage', name: 'StartPage', url: 'https://startpage.com', icon: 'https://www.google.com/s2/favicons?domain=startpage.com&sz=64' },
+];
+
 function readInitialCloak() {
   const title = localStorage.getItem('websiteTitle');
   const icon = localStorage.getItem('websiteIcon');
@@ -319,7 +326,7 @@ const AuthModal = ({ onClose }) => {
       <div className="modal auth-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-meta">
-            <div className="kind">tinf0il</div>
+            <div className="kind">1MMUN3</div>
             <h3>{mode === 'login' ? 'sign in' : 'create account'}</h3>
           </div>
         </div>
@@ -364,7 +371,7 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
       <div className="shell topbar-inner">
         <a href="/" className="brand" onClick={e => { e.preventDefault(); navigate('home'); }}>
           <img src="/assets/foil.png" alt="" className="brand-logo" />
-          <span>tinf<em>0</em>il</span>
+          <span>1<em>MMUN</em>3</span>
         </a>
         <nav className="nav-pill">
           {pages.map(p => (
@@ -372,9 +379,6 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
           ))}
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
-        <a className="status-chip" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer">
-          get more links ↗
-        </a>
         <button className="account-btn" onClick={onAccountClick}>
           {user ? (
             <>
@@ -395,9 +399,8 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
 const Footer = () => (
   <footer className="footer">
     <div className="shell footer-inner">
-      <span className="small">tinf0il · aluminum depot</span>
+      <span className="small">1MMUN3 · protection shield</span>
       <span className="small">no logs. no leaks.</span>
-      <a className="small" href="https://github.com/Aluminum-Depot" target="_blank" rel="noopener noreferrer">github ↗</a>
     </div>
   </footer>
 );
@@ -410,10 +413,10 @@ const Home = ({ navigate, voice }) => {
   const launch = async e => {
     e?.preventDefault();
     if (!query.trim()) { setStatus({ msg: 'paste something first', warn: true }); return; }
-    const url = window.Tinf0il?.normalizeUrl(query.trim());
+    const url = window.OneMMUN3?.normalizeUrl(query.trim());
     setStatus({ msg: 'starting proxy...' });
     try {
-      await window.Tinf0ilProxy.open(url);
+      await window.OneMMUN3Proxy.open(url);
     } catch (err) {
       setStatus({ msg: err.message || 'proxy failed.', warn: true });
     }
@@ -438,10 +441,7 @@ const Home = ({ navigate, voice }) => {
 
         <div className="hero-actions">
           <button className="btn" onClick={() => navigate('settings')}>tab cloak</button>
-          <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
-<a className="btn discord-btn" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer" data-tooltip="windows exploits · school unblocking · web proxy community">
-            join the discord ↗
-          </a>
+          <button className="btn" onClick={() => window.OneMMUN3?.openBlank()}>about:blank</button>
         </div>
 
         {status && (
@@ -468,13 +468,13 @@ const Proxy = ({ navigate }) => {
   const launch = async e => {
     e?.preventDefault();
     if (!query.trim()) return;
-    const url = window.Tinf0il?.normalizeUrl(query.trim());
+    const url = window.OneMMUN3?.normalizeUrl(query.trim());
     const display = query.replace(/^https?:\/\//, '').slice(0, 40);
     setHistory(h => [{ url: display, t: 'just now' }, ...h.slice(0, 4)]);
     setStatus(`routing → ${display}...`);
     setQuery('');
     try {
-      await window.Tinf0ilProxy.open(url);
+      await window.OneMMUN3Proxy.open(url);
     } catch (err) {
       setStatus(err.message || 'proxy failed.');
     }
@@ -501,7 +501,7 @@ const Proxy = ({ navigate }) => {
         {status && <div className="status-line ok">{status}</div>}
 
         <div className="hero-actions" style={{ justifyContent: 'flex-start' }}>
-          <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
+          <button className="btn" onClick={() => window.OneMMUN3?.openBlank()}>about:blank</button>
           <button className="btn" onClick={() => navigate('settings')}>settings</button>
         </div>
 
@@ -755,7 +755,7 @@ const LaunchModal = ({ item, onClose }) => {
   );
 };
 
-const Tinf0ilTV = ({ theme }) => {
+const OneMMUN3TV = ({ theme }) => {
   const [status, setStatus] = useState('loading');
   const iframeRef = useRef(null);
 
@@ -763,7 +763,11 @@ const Tinf0ilTV = ({ theme }) => {
   // start the iframe there instead of always at /tv/
   const [iframeSrc] = useState(() => {
     const p = location.pathname;
-    return p.startsWith('/tv/') ? (p + location.search) : '/tv/';
+    const baseUrl = (typeof window !== 'undefined' && window.TV_APP_URL) || 'http://localhost:3000';
+    if (p.startsWith('/tv/')) {
+      return baseUrl + (p.slice(3) + location.search);
+    }
+    return baseUrl;
   });
 
   const syncOuterUrl = () => {
@@ -789,10 +793,10 @@ const Tinf0ilTV = ({ theme }) => {
       const doc = iframeRef.current?.contentDocument;
       if (!doc) return;
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-      let style = doc.getElementById('tinf0il-accent');
+      let style = doc.getElementById('1mmun3-accent');
       if (!style) {
         style = doc.createElement('style');
-        style.id = 'tinf0il-accent';
+        style.id = '1mmun3-accent';
         doc.head.appendChild(style);
       }
       style.textContent = `:root { --accent: ${accent}; }`;
@@ -810,7 +814,7 @@ const Tinf0ilTV = ({ theme }) => {
         <div className="tv-loading">
           <div className="tv-loading-inner">
             <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
-            <span className="tv-loading-label">tinf<em>0</em>il TV</span>
+            <span className="tv-loading-label">1<em>MMUN</em>3 TV</span>
             <div className="tv-loading-bar"><div className="tv-loading-fill" /></div>
             <p className="tv-loading-notice">⚠ Streaming players may open popup ads upon clicking Close them and playback continues normally</p>
           </div>
@@ -820,14 +824,14 @@ const Tinf0ilTV = ({ theme }) => {
         <div className="tv-loading">
           <div className="tv-loading-inner">
             <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
-            <span className="tv-loading-label">tinf<em>0</em>il TV</span>
+            <span className="tv-loading-label">1<em>MMUN</em>3 TV</span>
             <p className="tv-err">TV app isn't running — start the server then refresh.</p>
           </div>
         </div>
       )}
       <section
         className="tv-app-frame-wrap"
-        aria-label="tinf0il TV"
+        aria-label="1MMUN3 TV"
         style={{ visibility: status === 'ready' ? 'visible' : 'hidden' }}
         onMouseEnter={enterFrame}
         onMouseLeave={leaveFrame}
@@ -835,7 +839,7 @@ const Tinf0ilTV = ({ theme }) => {
         <iframe
           ref={iframeRef}
           className="tv-app-frame"
-          title="tinf0il TV"
+          title="1MMUN3 TV"
           src={iframeSrc}
           allow="autoplay; fullscreen; picture-in-picture"
           referrerPolicy="no-referrer"
@@ -941,27 +945,59 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
   const [autoBlank, setAutoBlank] = useState(false);
   const [stealth, setStealth] = useState(true);
+  const [antiGuardian, setAntiGuardian] = useState(() => localStorage.getItem('1MMUN3AntiGuardian') === 'true');
+  const [browser, setBrowser] = useState(() => localStorage.getItem('1MMUN3Browser') || 'duckduckgo');
 
-  const [panicKey, setPanicKey] = useState(() => localStorage.getItem('tinf0ilPanicKey') || 'Escape');
-  const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('tinf0ilPanicUrl') || '');
+  // Anti-guardian effect
+  useEffect(() => {
+    if (!antiGuardian) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'save your work?';
+      return 'save your work?';
+    };
+
+    const handleScreenCapture = () => {
+      try {
+        if (document.hidden) {
+          document.body.style.display = 'none';
+          setTimeout(() => { document.body.style.display = ''; }, 100);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleScreenCapture);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleScreenCapture);
+    };
+  }, [antiGuardian]);
+
+  const [panicKey, setPanicKey] = useState(() => localStorage.getItem('1MMUN3PanicKey') || 'Escape');
+  const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('1MMUN3PanicUrl') || '');
   const [listeningForKey, setListeningForKey] = useState(false);
 
   const savePanic = (key, url) => {
-    localStorage.setItem('tinf0ilPanicKey', key);
-    if (url.trim()) localStorage.setItem('tinf0ilPanicUrl', url.trim());
-    else localStorage.removeItem('tinf0ilPanicUrl');
+    localStorage.setItem('1MMUN3PanicKey', key);
+    if (url.trim()) localStorage.setItem('1MMUN3PanicUrl', url.trim());
+    else localStorage.removeItem('1MMUN3PanicUrl');
   };
 
   const themes = [
-    { id: 'midnight', name: 'midnight', pal: ['#07090d', '#69b4cc', '#334'] },
-    { id: 'daylight', name: 'daylight', pal: ['#f0ede8', '#4a8a74', '#ccc'] },
-    { id: 'acid',     name: 'acid',     pal: ['#0c0c0f', '#7eb8a4', '#1a2'] },
-    { id: 'bubblegum',name: 'bubblegum',pal: ['#120910', '#c47aaa', '#412'] },
+    { id: 'midnight', name: 'midnight', pal: ['#000000', '#ffffff', '#0a0a0a'] },
+    { id: 'daylight', name: 'daylight', pal: ['#ffffff', '#000000', '#f5f5f5'] },
+    { id: 'bubblegum',name: 'bubblegum',pal: ['#1a0a15', '#c47aaa', '#2d1227'] },
+    { id: 'ocean',    name: 'ocean',    pal: ['#0a1929', '#29b6f6', '#132f4c'] },
+    { id: 'forest',   name: 'forest',   pal: ['#0b3d1a', '#4caf50', '#1b5e2c'] },
   ];
 
   const toggles = [
     { key: 'autoBlank', val: autoBlank, set: setAutoBlank, label: 'auto about:blank', sub: 'open everything in a cloak window by default.' },
     { key: 'stealth',   val: stealth,   set: setStealth,   label: 'stealth route',    sub: 'strip referrers and telemetry on every jump.' },
+    { key: 'antiGuardian', val: antiGuardian, set: (v) => { setAntiGuardian(v); localStorage.setItem('1MMUN3AntiGuardian', v); }, label: 'anti-guardian', sub: 'prevent your teacher from closing this tab.' },
     { key: 'reduce',    val: reduce,    set: setReduce,    label: 'reduce motion',     sub: 'turn off background animations.' },
     { key: 'bigText',   val: bigText,   set: setBigText,   label: 'larger text',      sub: 'bumps up font sizes a notch.' },
   ];
@@ -1045,20 +1081,20 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
             <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
               <button className="btn accent" onClick={() => {
-                window.Tinf0ilSettings?.save({
+                window.OneMMUN3Settings?.save({
                   title: cloakTitle,
                   icon: cloakIcon,
                   theme,
                   cloakPreset: cloakPresetId,
                   cloakHost: cloakAddressHost,
                 });
-                document.title = cloakTitle || 'tinf0il';
+                document.title = cloakTitle || '1MMUN3';
                 const fav = document.querySelector("link[rel='icon']");
                 if (fav && cloakIcon) fav.href = cloakIcon;
                 onCloakSave?.({ title: cloakTitle, icon: cloakIcon, presetId: cloakPresetId, host: cloakAddressHost });
               }}>save</button>
               <button className="btn" onClick={() => {
-                window.Tinf0ilSettings?.clear();
+                window.OneMMUN3Settings?.clear();
                 const classroom = CLOAK_PRESETS.find(p => p.id === 'classroom');
                 setCloakPresetId('classroom');
                 setCloakTitle(classroom.title);
@@ -1066,7 +1102,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 setCloakAddressHost(classroom.host);
                 setImportUrl('');
                 setImportErr('');
-                document.title = 'tinf0il · home';
+                document.title = '1MMUN3 · home';
                 const fav = document.querySelector("link[rel='icon']");
                 if (fav) fav.href = '/assets/foil.png';
               }}>reset</button>
@@ -1102,6 +1138,38 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 onChange={e => { setPanicUrl(e.target.value); savePanic(panicKey, e.target.value); }}
                 placeholder="classroom.google.com"
               />
+            </div>
+          </div>
+
+          <div className="panel">
+            <span className="panel-tag">// browser</span>
+            <h3>default browser</h3>
+            <p className="h-sub">set your search engine.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
+              {BROWSER_OPTIONS.map(b => (
+                <button
+                  key={b.id}
+                  type="button"
+                  className={cx('browser-pick', browser === b.id && 'on')}
+                  onClick={() => { setBrowser(b.id); localStorage.setItem('1MMUN3Browser', b.id); }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: 12,
+                    borderRadius: 7,
+                    border: `1px solid ${browser === b.id ? 'var(--accent)' : 'var(--line)'}`,
+                    background: 'var(--bg2)',
+                    cursor: 'pointer',
+                    transition: 'border-color 140ms',
+                    color: 'var(--text)',
+                  }}
+                >
+                  <img src={b.icon} alt="" style={{ width: 28, height: 28, borderRadius: 4 }} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+                  <span style={{ fontSize: 12, fontWeight: 500 }}>{b.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -1185,7 +1253,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 const About = () => (
   <main>
     <section className="shell page-hero">
-      <h1>tinf<em>0</em>il</h1>
+      <h1>1<em>MMUN</em>3</h1>
       <p className="lede">a lightweight proxy portal. browse, play, work. privately.</p>
     </section>
 
@@ -1194,7 +1262,7 @@ const About = () => (
         <span className="panel-tag">// the deal</span>
         <h3>why this exists</h3>
         <p className="h-sub" style={{ fontSize: 14, lineHeight: 1.7 }}>
-          ads everywhere, paywalls everywhere, your school blocking half the web. tinf0il is a clean room. route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
+          ads everywhere, paywalls everywhere, your school blocking half the web. 1MMUN3 is a clean room. route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
         </p>
         <div className="tile-row">
           <div className="tile"><div className="num">{window.GAMES?.length ?? "—"}</div><div className="lab">games</div></div>
@@ -1223,18 +1291,320 @@ const About = () => (
   </main>
 );
 
-const WIDGETBOT_SERVER = '1065018473459228783';
-const WIDGETBOT_CHANNEL = '1095365023414616255';
-
 const Chatroom = () => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [username, setUsername] = useState(() => localStorage.getItem('1MMUN3ChatUsername') || '');
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+  const nameInputRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (showNameInput && nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, [showNameInput]);
+
+  // Load messages from Firebase
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const response = await fetch('https://1mmun3-b75b1-default-rtdb.firebaseio.com/chatMessages.json');
+        if (response.ok) {
+          const data = await response.json();
+          const msgArray = data ? Object.values(data).sort((a, b) => a.timestamp - b.timestamp) : [];
+          setMessages(msgArray);
+        }
+      } catch (err) {
+        console.error('Failed to load messages:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMessages();
+    const interval = setInterval(loadMessages, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || !username.trim() || sending) return;
+
+    setSending(true);
+    try {
+      const newMessage = {
+        id: Date.now().toString(),
+        username: username.trim(),
+        text: input.trim(),
+        timestamp: Date.now(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      const response = await fetch('https://1mmun3-b75b1-default-rtdb.firebaseio.com/chatMessages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMessage),
+      });
+
+      if (response.ok) {
+        setInput('');
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleNameSave = (name) => {
+    if (name.trim()) {
+      localStorage.setItem('1MMUN3ChatUsername', name.trim());
+      setUsername(name.trim());
+      setShowNameInput(false);
+    }
+  };
+
+  const clearChat = () => {
+    if (confirm('Clear all messages? This action cannot be undone.')) {
+      fetch('https://1mmun3-b75b1-default-rtdb.firebaseio.com/chatMessages.json', { method: 'DELETE' })
+        .then(() => setMessages([]))
+        .catch(err => console.error('Failed to clear chat:', err));
+    }
+  };
+
   return (
-    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0 }}>
-      <iframe
-        src={`https://e.widgetbot.io/channels/${WIDGETBOT_SERVER}/${WIDGETBOT_CHANNEL}`}
-        title="tinf0il chatroom"
-        allow="clipboard-write; fullscreen"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-      />
+    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
+      {/* Header */}
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)' }}>1MMUN3 Chatroom</div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{messages.length} {messages.length === 1 ? 'message' : 'messages'}</div>
+          </div>
+        </div>
+        <button
+          onClick={clearChat}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--line)',
+            color: 'var(--muted)',
+            padding: '6px 12px',
+            cursor: 'pointer',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'var(--accent-dim)';
+            e.target.style.color = 'var(--accent)';
+            e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = 'var(--muted)';
+            e.target.style.borderColor = 'var(--line)';
+          }}
+        >
+          Clear Chat
+        </button>
+      </div>
+
+      {/* Messages Area */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px', scrollBehavior: 'smooth' }}>
+        {loading && (
+          <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 'auto', marginBottom: 'auto' }}>
+            <div style={{ fontSize: '14px' }}>Loading messages...</div>
+          </div>
+        )}
+        {!loading && messages.length === 0 && (
+          <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 'auto', marginBottom: 'auto' }}>
+            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>No messages yet</div>
+            <div style={{ fontSize: '13px' }}>Be the first to start the conversation!</div>
+          </div>
+        )}
+        {messages.map((msg) => (
+          <div key={msg.id} style={{ display: 'flex', gap: '12px', fontSize: '14px', animation: 'fadeIn 0.2s ease' }}>
+            <div>
+              <div style={{ color: 'var(--accent)', fontWeight: '600', fontSize: '13px', marginBottom: '2px' }}>
+                {msg.username}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '11px' }}>
+                {msg.time}
+              </div>
+            </div>
+            <div style={{ flex: 1, paddingTop: '2px' }}>
+              <div style={{ color: 'var(--text)', wordBreak: 'break-word', lineHeight: '1.4', fontSize: '14px' }}>
+                {msg.text}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--line)', background: 'var(--bg2)' }}>
+        {/* Username Section */}
+        <div style={{ marginBottom: '12px' }}>
+          {showNameInput ? (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                ref={nameInputRef}
+                type="text"
+                placeholder="Enter your username..."
+                defaultValue={username}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleNameSave(e.target.value);
+                }}
+                onBlur={(e) => handleNameSave(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--line)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontFamily: 'Inter, sans-serif',
+                  outline: 'none',
+                  transition: 'border-color 150ms ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'var(--accent-dim)';
+                }}
+              />
+              <button
+                onClick={() => handleNameSave(nameInputRef.current?.value || '')}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--accent-dim)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'var(--accent)',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 150ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'var(--accent)';
+                  e.target.style.color = '#000';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'var(--accent-dim)';
+                  e.target.style.color = 'var(--accent)';
+                }}
+              >
+                Save
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => setShowNameInput(true)}
+              style={{
+                fontSize: '12px',
+                color: 'var(--muted)',
+                padding: '8px 12px',
+                background: 'var(--bg)',
+                border: '1px solid var(--line)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-dim)';
+                e.currentTarget.style.color = 'var(--accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--line)';
+                e.currentTarget.style.color = 'var(--muted)';
+              }}
+            >
+              {username ? <span>Chatting as <strong style={{ color: 'var(--accent)' }}>{username}</strong> • Click to change</span> : 'Set a username to chat'}
+            </div>
+          )}
+        </div>
+
+        {/* Message Input */}
+        <form onSubmit={sendMessage} style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={username ? 'Say something...' : 'Set a username first...'}
+            disabled={!username}
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              background: 'var(--bg)',
+              border: '1px solid var(--line)',
+              color: 'var(--text)',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+              transition: 'border-color 150ms ease',
+              opacity: username ? 1 : 0.5,
+            }}
+            onFocus={(e) => {
+              if (username) e.target.style.borderColor = 'var(--accent-dim)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--line)';
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || !username || sending}
+            style={{
+              padding: '10px 20px',
+              background: input.trim() && username && !sending ? 'var(--accent-dim)' : 'transparent',
+              border: '1px solid var(--line)',
+              color: input.trim() && username && !sending ? 'var(--accent)' : 'var(--muted)',
+              borderRadius: '6px',
+              cursor: input.trim() && username && !sending ? 'pointer' : 'not-allowed',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 150ms ease',
+              fontFamily: 'Inter, sans-serif',
+              opacity: sending ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (input.trim() && username && !sending) {
+                e.target.style.background = 'var(--accent)';
+                e.target.style.color = 'var(--bg)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (input.trim() && username && !sending) {
+                e.target.style.background = 'var(--accent-dim)';
+                e.target.style.color = 'var(--accent)';
+              }
+            }}
+          >
+            {sending ? 'Sending...' : 'Send'}
+          </button>
+        </form>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
@@ -1306,7 +1676,7 @@ const SPLASHES = [
 const VOICE_PRESETS = {
   punchy: {
     headline: null,
-    lede: 'paste a link and go. tinf0il routes it, you get there.',
+    lede: 'paste a link and go. 1MMun3 routes it, you get there.',
   },
   chill: {
     headline: <>browse privately. <em>that's it.</em></>,
@@ -1325,34 +1695,63 @@ const App = () => {
   const [activeItem, setActiveItem] = useState(null);
 
   // ── cursor ──
-  const [cursorStyle, setCursorStyleState] = useState(() => localStorage.getItem('tinf0ilCursor') || 'dot');
-  const setCursorStyle = (v) => { setCursorStyleState(v); localStorage.setItem('tinf0ilCursor', v); };
+  const [cursorStyle, setCursorStyleState] = useState(() => localStorage.getItem('1MMUN3Cursor') || 'dot');
+  const setCursorStyle = (v) => { setCursorStyleState(v); localStorage.setItem('1MMUN3Cursor', v); };
 
   // ── reduce motion ──
   const [reduce, setReduceState] = useState(() => {
-    const v = localStorage.getItem('tinf0ilReduce') === 'true';
+    const v = localStorage.getItem('1MMUN3Reduce') === 'true';
     if (v) document.documentElement.setAttribute('data-reduce-motion', '');
     return v;
   });
   const setReduce = (v) => {
     setReduceState(v);
-    localStorage.setItem('tinf0ilReduce', v);
+    localStorage.setItem('1MMUN3Reduce', v);
     if (v) document.documentElement.setAttribute('data-reduce-motion', '');
     else document.documentElement.removeAttribute('data-reduce-motion');
   };
 
   // ── big text ──
   const [bigText, setBigTextState] = useState(() => {
-    const v = localStorage.getItem('tinf0ilBigText') === 'true';
+    const v = localStorage.getItem('1MMUN3BigText') === 'true';
     if (v) document.documentElement.setAttribute('data-big-text', '');
     return v;
   });
   const setBigText = (v) => {
     setBigTextState(v);
-    localStorage.setItem('tinf0ilBigText', v);
+    localStorage.setItem('1MMUN3BigText', v);
     if (v) document.documentElement.setAttribute('data-big-text', '');
     else document.documentElement.removeAttribute('data-big-text');
   };
+
+  // ── anti-guardian (app-level) ──
+  useEffect(() => {
+    const antiGuardian = localStorage.getItem('1MMUN3AntiGuardian') === 'true';
+    if (!antiGuardian) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'save your work?';
+      return 'save your work?';
+    };
+
+    const handleVisibilityChange = () => {
+      try {
+        if (document.hidden) {
+          document.body.style.display = 'none';
+          setTimeout(() => { if (document.hidden) document.body.style.display = ''; }, 100);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // ── auth ──
   const [user, setUser] = useState(null);
@@ -1364,12 +1763,12 @@ const App = () => {
 
   // ── favorites ──
   const [favorites, setFavoritesState] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('tinf0ilFavorites') || '{"games":[],"apps":[]}'); }
+    try { return JSON.parse(localStorage.getItem('1MMUN3Favorites') || '{"games":[],"apps":[]}'); }
     catch { return { games: [], apps: [] }; }
   });
 
   const saveFavs = (updated, uid) => {
-    localStorage.setItem('tinf0ilFavorites', JSON.stringify(updated));
+    localStorage.setItem('1MMUN3Favorites', JSON.stringify(updated));
     if (uid) window.fbDb?.collection('proxy-users').doc(uid).set({ favorites: updated }, { merge: true }).catch(() => {});
   };
 
@@ -1386,8 +1785,8 @@ const App = () => {
   // ── cloud sync helpers ──
   const cloudSettings = () => ({
     theme, cursorStyle, reduce, bigText,
-    panicKey: localStorage.getItem('tinf0ilPanicKey') || 'Escape',
-    panicUrl: localStorage.getItem('tinf0ilPanicUrl') || '',
+    panicKey: localStorage.getItem('1MMUN3PanicKey') || 'Escape',
+    panicUrl: localStorage.getItem('1MMUN3PanicUrl') || '',
   });
 
   const pushSettings = (extra = {}) => {
@@ -1409,8 +1808,8 @@ const App = () => {
     if (s.cursorStyle) setCursorStyleState(s.cursorStyle);
     if (s.reduce  != null) setReduce(s.reduce);
     if (s.bigText != null) setBigText(s.bigText);
-    if (s.panicKey) localStorage.setItem('tinf0ilPanicKey', s.panicKey);
-    if (s.panicUrl != null) localStorage.setItem('tinf0ilPanicUrl', s.panicUrl);
+    if (s.panicKey) localStorage.setItem('1MMUN3PanicKey', s.panicKey);
+    if (s.panicUrl != null) localStorage.setItem('1MMUN3PanicUrl', s.panicUrl);
     if (s.cloak) {
       if (s.cloak.title) localStorage.setItem('websiteTitle', s.cloak.title);
       if (s.cloak.icon)  localStorage.setItem('websiteIcon',  s.cloak.icon);
@@ -1432,7 +1831,7 @@ const App = () => {
             applyCloudSettings(data.settings);
             if (data.favorites) {
               setFavoritesState(data.favorites);
-              localStorage.setItem('tinf0ilFavorites', JSON.stringify(data.favorites));
+              localStorage.setItem('1MMUN3Favorites', JSON.stringify(data.favorites));
             }
             setSyncStatus('saved');
           } else {
@@ -1476,8 +1875,8 @@ const App = () => {
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
     if (localStorage.getItem('websiteTitle')) return;
-    const titles = { home: 'tinf0il · home', games: 'tinf0il · games', apps: 'tinf0il · apps', tv: 'tinf0il TV', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
-    document.title = titles[page] || 'tinf0il';
+    const titles = { home: '1MMUN3 · home', games: '1MMUN3 · games', apps: '1MMUN3 · apps', tv: '1MMUN3 TV', chatroom: '1MMUN3 · chatroom', settings: '1MMUN3 · settings', about: '1MMUN3 · about' };
+    document.title = titles[page] || '1MMUN3';
   }, [page]);
 
   useEffect(() => {
@@ -1492,13 +1891,13 @@ const App = () => {
 
   return (
     <>
-      <CustomCursor cursorStyle={(page === 'tv' || page === 'chatroom') ? 'off' : cursorStyle} />
+      <CustomCursor cursorStyle={cursorStyle} />
       <TopBar page={page} navigate={navigate} user={user} onAccountClick={handleAccountClick} />
 
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
       {page === 'games'    && <Catalog kind="games" items={window.GAMES} tags={window.GAME_TAGS} setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
       {page === 'apps'     && <Catalog kind="apps"  items={window.APPS}  tags={window.APP_TAGS}  setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
-      {page === 'tv'       && <Tinf0ilTV theme={theme} />}
+      {page === 'tv'       && <OneMMUN3TV theme={theme} />}
       {page === 'chatroom' && <Chatroom />}
       {page === 'settings' && <Settings theme={theme} setTheme={t => { setTheme(t); setTweak('theme', t); }} cursorStyle={cursorStyle} setCursorStyle={setCursorStyle} reduce={reduce} setReduce={setReduce} bigText={bigText} setBigText={setBigText} user={user} onSignOut={handleSignOut} onShowAuth={() => setShowAuth(true)} onCloakSave={c => pushSettings({ cloak: c })} syncStatus={syncStatus} />}
       {page === 'about'    && <About />}

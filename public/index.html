@@ -13,12 +13,13 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#07090d">
+  <meta name="theme-color" content="#000000">
   <!-- PAGE_META -->
   <link rel="icon" href="/assets/foil.png">
   <link rel="stylesheet" href="/styles.css">
   <script>
     window.TWEAK_DEFAULTS = { "theme": "acid", "voice": "punchy" };
+    window.TV_APP_URL = 'http://localhost:3000';
   </script>
   <script src="/assets/js/settings.js"></script>
   <script src="/assets/js/proxy-scramjet.js" defer></script>
@@ -29,9 +30,9 @@
   <script>
     firebase.initializeApp({
       apiKey: "AIzaSyB6_jbjIoS1Vu4Er3FadpMmEnFXEcD9yuo",
-      authDomain: "tinf0il-b75b1.firebaseapp.com",
-      projectId: "tinf0il-b75b1",
-      storageBucket: "tinf0il-b75b1.firebasestorage.app",
+      authDomain: "1mmun3-b75b1.firebaseapp.com",
+      projectId: "1mmun3-b75b1",
+      storageBucket: "1mmun3-b75b1.firebasestorage.app",
       messagingSenderId: "12175261060",
       appId: "1:12175261060:web:1ff4e080311327382971d1"
     });
@@ -87,13 +88,13 @@
                 const q = pts[j];
                 const d = Math.hypot(p.x - q.x, p.y - q.y);
                 if (d < 105) {
-                  ctx.strokeStyle = `rgba(255,255,255,${0.045 * (1 - d / 105)})`;
+                  ctx.strokeStyle = `rgba(255,255,255,${0.02 * (1 - d / 105)})`;
                   ctx.lineWidth = 0.5;
                   ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
                 }
               }
               ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-              ctx.fillStyle = `rgba(255,255,255,${p.a})`; ctx.fill();
+              ctx.fillStyle = `rgba(255,255,255,${p.a * 0.5})`; ctx.fill();
             }
           }
           requestAnimationFrame(frame);

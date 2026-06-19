@@ -21,12 +21,12 @@ const nextConfig = {
 
   env: {
     TMDB_API_KEY: "7f07bff404ee5ba865c936f48d41327a",
-    NEXT_PUBLIC_URL: "https://tinf0il-111676177226.herokuapp.com/tv",
+    NEXT_PUBLIC_URL: "https://1mmun3-111676177226.herokuapp.com/tv",
     NEXT_PUBLIC_ENCRYPTION_KEY: "7327472265ecf9b23e675ada29be11623945fc42580f97f67bf563ca6e3af25e",
     apiKey: "AIzaSyB6_jbjIoS1Vu4Er3FadpMmEnFXEcD9yuo",
-    authDomain: "tinf0il-b75b1.firebaseapp.com",
-    projectId: "tinf0il-b75b1",
-    storageBucket: "tinf0il-b75b1.firebasestorage.app",
+    authDomain: "1mmun3-b75b1.firebaseapp.com",
+    projectId: "1mmun3-b75b1",
+    storageBucket: "1mmun3-b75b1.firebasestorage.app",
     messagingSenderId: "12175261060",
     appId: "1:12175261060:web:1ff4e080311327382971d1",
     measurementId: "G-6JZC2CJP4Y",
