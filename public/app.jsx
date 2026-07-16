@@ -141,17 +141,9 @@ const FloatingLogo = () => {
       '.ad-slot',
     ];
 
-    /* Ceiling for the ball. The banner sits directly under the topbar on home,
-       so the topbar's bottom alone would let the logo start on top of it. */
     function topLimit() {
       const topbar = document.querySelector('.topbar');
-      const topAd = document.querySelector('.ad-top .ad-slot');
-      let y = topbar ? topbar.getBoundingClientRect().bottom : 56;
-      if (topAd) {
-        const r = topAd.getBoundingClientRect();
-        if (r.height > 4) y = Math.max(y, r.bottom);
-      }
-      return y;
+      return topbar ? topbar.getBoundingClientRect().bottom : 56;
     }
 
     function collectObstacles() {
@@ -531,10 +523,6 @@ const Home = ({ navigate, voice }) => {
     <main className="home">
       <FloatingLogo />
 
-      <section className="shell ad-top">
-        <ResponsiveBanner />
-      </section>
-
       <section className="shell hero">
         <h1>probe the internet privately. <em>{voice.headline ? voice.headline : splash}</em></h1>
         <p className="hero-sub">{voice.lede}</p>
@@ -564,11 +552,11 @@ const Home = ({ navigate, voice }) => {
         )}
       </section>
 
-      <Footer />
-
       <section className="shell">
-        <AdSlot unit="native" />
+        <ResponsiveBanner />
       </section>
+
+      <Footer />
     </main>
   );
 };
