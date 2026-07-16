@@ -430,6 +430,7 @@ const AD_UNITS = {
   },
   banner728: { type: 'banner', key: 'b96808397c479bcdeab00c4d97c9e2f1', width: 728, height: 90  },
   banner300: { type: 'banner', key: '068fa43f3df751a09683d559c819e18f', width: 300, height: 250 },
+  sky160:    { type: 'banner', key: '0b7fd6b2125a6f37356ac2638db9c719', width: 160, height: 600 },
 };
 
 const bannerSrcDoc = cfg => {
@@ -487,19 +488,42 @@ const AdSlot = ({ unit, className }) => {
   );
 };
 
-/* 728x90 needs a ~740px shell to sit in; below that the 300x250 carries the slot. */
-const ResponsiveBanner = ({ className }) => {
-  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 780px)').matches);
+/* Media-query gate. Both ad layouts below swap on viewport width, and both have
+   to do it in JS rather than CSS: a unit hidden with display:none still loads and
+   books an impression nobody can see. */
+const useMinWidth = px => {
+  const query = `(min-width: ${px}px)`;
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 780px)');
-    const onChange = e => setWide(e.matches);
-    setWide(mq.matches);
+    const mq = window.matchMedia(query);
+    const onChange = e => setMatches(e.matches);
+    setMatches(mq.matches);
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
-  }, []);
+  }, [query]);
 
+  return matches;
+};
+
+/* 728x90 needs a ~740px shell to sit in; below that the 300x250 carries the slot. */
+const ResponsiveBanner = ({ className }) => {
+  const wide = useMinWidth(780);
   return <AdSlot unit={wide ? 'banner728' : 'banner300'} className={className} />;
+};
+
+/* Rails flanking the 860px shell. 1240px is the floor that fits both: the shell
+   plus two 160px rails plus their gutters. Narrower than that, the page simply
+   has no ads rather than cramped ones. */
+const SideRails = () => {
+  const room = useMinWidth(1240);
+  if (!room) return null;
+  return (
+    <>
+      <AdSlot unit="sky160" className="side-rail side-rail--left" />
+      <AdSlot unit="sky160" className="side-rail side-rail--right" />
+    </>
+  );
 };
 
 const Home = ({ navigate, voice }) => {
@@ -1289,10 +1313,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
         </div>
       </section>
 
-      <section className="shell">
-        <ResponsiveBanner />
-        <AdSlot unit="native" />
-      </section>
+      <SideRails />
     </main>
   );
 };
@@ -1336,10 +1357,7 @@ const About = () => (
       </div>
     </section>
 
-    <section className="shell">
-      <ResponsiveBanner />
-      <AdSlot unit="native" />
-    </section>
+    <SideRails />
   </main>
 );
 

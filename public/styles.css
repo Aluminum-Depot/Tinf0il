@@ -1602,3 +1602,22 @@ html.cursor-in-iframe * { cursor: auto !important; }
   max-width: 100%;
   color-scheme: light;
 }
+
+/* Rails pinned to the gutters either side of the 860px shell (430px half-width
+   plus a 24px gutter). Fixed rather than sticky so they hold position on pages
+   long enough to scroll. Rendering is gated in JS at 1240px — see SideRails. */
+.side-rail {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  z-index: 5;
+}
+
+.side-rail--left {
+  right: calc(50% + 430px + 24px);
+}
+
+.side-rail--right {
+  left: calc(50% + 430px + 24px);
+}
