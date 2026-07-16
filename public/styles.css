@@ -10,6 +10,8 @@
   --dim: #38383f;
   --accent: #7eb8a4;
   --accent-dim: rgba(126, 184, 164, 0.15);
+  /* .topbar-inner height (52px) + its 1px bottom border */
+  --topbar-h: 53px;
 }
 
 [data-theme="daylight"] {
@@ -356,8 +358,14 @@ main {
 }
 
 /* ── hero ── */
+/* flex:1 alone only centers while there's free space in main to absorb — once
+   anything else (ads, footer) fills the column the hero collapses to its content
+   height and rides up under the topbar. min-height floors it at one full screen
+   so it centers regardless of what's stacked below; flex:1 still lets it grow on
+   taller viewports. */
 .hero {
   flex: 1;
+  min-height: calc(100dvh - var(--topbar-h));
   padding: 0;
   display: flex;
   flex-direction: column;

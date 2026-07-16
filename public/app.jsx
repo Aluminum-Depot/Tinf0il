@@ -1283,6 +1283,11 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
           </div>
         </div>
       </section>
+
+      <section className="shell">
+        <ResponsiveBanner />
+        <AdSlot unit="native" />
+      </section>
     </main>
   );
 };
@@ -1324,6 +1329,11 @@ const About = () => (
           <li><span className="k">license</span><span className="v">open source · mit</span><span className="stat">free</span></li>
         </ul>
       </div>
+    </section>
+
+    <section className="shell">
+      <ResponsiveBanner />
+      <AdSlot unit="native" />
     </section>
   </main>
 );
