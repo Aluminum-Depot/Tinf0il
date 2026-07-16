@@ -775,6 +775,21 @@ a {
   gap: 8px;
 }
 
+/* 160x600 fits the 227-267px usable column with room to spare; the aside already
+   scrolls (overflow: auto) if the viewport is too short for the full height. */
+.load-side-ad {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.load-side-ad-frame {
+  border: 0;
+  display: block;
+  max-width: 100%;
+  color-scheme: light;
+}
+
 .browser-main-grid.is-collapsed .load-side-top {
   margin: 0 0 8px 0;
   justify-content: center;

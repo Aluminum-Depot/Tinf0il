@@ -37,6 +37,54 @@
 
   const LAUNCH_SIDEBAR_KEY = "tinf0ilLaunchSidebarCollapsed";
 
+  /* Adsterra 160x600 for the launch sidebar.
+     Mounted only while the sidebar is both visible and expanded: this aside stays
+     `hidden` for plain ?url= browsing and shrinks to a 48px rail when collapsed,
+     and a unit that loads in either state still books an impression nobody can
+     see. Own srcdoc iframe so `atOptions` stays out of the page's globals.
+     Set `key` to the unit id from Adsterra; null renders nothing. */
+  const SIDE_AD = { key: "0b7fd6b2125a6f37356ac2638db9c719", width: 160, height: 600 };
+
+  function sideAdSrcDoc() {
+    const opts = JSON.stringify({
+      key: SIDE_AD.key,
+      format: "iframe",
+      height: SIDE_AD.height,
+      width: SIDE_AD.width,
+      params: {},
+    });
+    return [
+      '<!doctype html><html><head><meta charset="utf-8">',
+      "<style>html,body{margin:0;padding:0;overflow:hidden}</style></head><body>",
+      "<script>atOptions = " + opts + ";<\/script>",
+      '<script src="https://www.highperformanceformat.com/' +
+        SIDE_AD.key +
+        '/invoke.js"><\/script>',
+      "</body></html>",
+    ].join("");
+  }
+
+  function mountSideAd() {
+    const host = $("[data-side-ad]");
+    if (!host || !SIDE_AD.key || host.firstChild) return;
+    const frame = document.createElement("iframe");
+    frame.className = "load-side-ad-frame";
+    frame.title = "advertisement";
+    frame.width = SIDE_AD.width;
+    frame.height = SIDE_AD.height;
+    frame.scrolling = "no";
+    frame.srcdoc = sideAdSrcDoc();
+    host.appendChild(frame);
+    host.hidden = false;
+  }
+
+  function unmountSideAd() {
+    const host = $("[data-side-ad]");
+    if (!host) return;
+    host.textContent = "";
+    host.hidden = true;
+  }
+
   function syncLaunchSidebarCollapsed(collapsed) {
     const grid = $("#browser-main-grid");
     const aside = $("#launch-sidebar");
@@ -49,11 +97,14 @@
       collapseBtn.setAttribute("aria-expanded", String(!collapsed));
     }
     if (expandBtn) expandBtn.hidden = !collapsed;
+    if (collapsed) unmountSideAd();
+    else mountSideAd();
   }
 
   function hideLaunchSidebar() {
     const grid = $("#browser-main-grid");
     const aside = $("#launch-sidebar");
+    unmountSideAd();
     grid?.classList.remove("has-launch-sidebar", "is-collapsed");
     if (aside) {
       aside.hidden = true;
