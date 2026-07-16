@@ -402,6 +402,101 @@ const Footer = () => (
   </footer>
 );
 
+/* Adsterra units.
+
+   Two different embed mechanisms here, hence two render paths:
+
+   - native: invoke.js hunts for `container-<id>` in the DOM at load time, so the
+     container must exist before the script runs — hence the manual append order
+     rather than plain JSX.
+
+   - banner: invoke.js reads a *global* `atOptions` set by an inline script just
+     above it. Two banners on one page would clobber each other's globals and race,
+     so each one gets its own srcdoc iframe — a separate window, a separate
+     `atOptions`. This is also what keeps the ad's own DOM out of ours.
+
+   Both re-mount on page change, which is what Adsterra expects for a fresh
+   impression. */
+const AD_UNITS = {
+  native: {
+    type: 'native',
+    id:   'c19feb71b6e6124467c76c1b353dd0d9',
+    src:  'https://pl30385267.effectivecpmnetwork.com/c19feb71b6e6124467c76c1b353dd0d9/invoke.js',
+  },
+  banner728: { type: 'banner', key: 'b96808397c479bcdeab00c4d97c9e2f1', width: 728, height: 90  },
+  banner300: { type: 'banner', key: '068fa43f3df751a09683d559c819e18f', width: 300, height: 250 },
+};
+
+const bannerSrcDoc = cfg => {
+  const opts = JSON.stringify({
+    key: cfg.key, format: 'iframe', height: cfg.height, width: cfg.width, params: {},
+  });
+  return [
+    '<!doctype html><html><head><meta charset="utf-8">',
+    '<style>html,body{margin:0;padding:0;overflow:hidden}</style></head><body>',
+    '<script>atOptions = ' + opts + ';<\/script>',
+    '<script src="https://www.highperformanceformat.com/' + cfg.key + '/invoke.js"><\/script>',
+    '</body></html>',
+  ].join('');
+};
+
+const AdSlot = ({ unit, className }) => {
+  const hostRef = useRef(null);
+  const cfg = AD_UNITS[unit];
+  const isNative = cfg?.type === 'native';
+
+  useEffect(() => {
+    if (!isNative) return;
+    const host = hostRef.current;
+    if (!host) return;
+
+    const container = document.createElement('div');
+    container.id = `container-${cfg.id}`;
+    host.appendChild(container);
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    script.src = cfg.src;
+    host.appendChild(script);
+
+    return () => { host.innerHTML = ''; };
+  }, [cfg, isNative]);
+
+  if (!cfg) return null;
+
+  if (isNative) return <div className={cx('ad-slot', className)} ref={hostRef} />;
+
+  return (
+    <div className={cx('ad-slot', className)}>
+      <iframe
+        className="ad-frame"
+        title="advertisement"
+        srcDoc={bannerSrcDoc(cfg)}
+        width={cfg.width}
+        height={cfg.height}
+        scrolling="no"
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
+/* 728x90 needs a ~740px shell to sit in; below that the 300x250 carries the slot. */
+const ResponsiveBanner = ({ className }) => {
+  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 780px)').matches);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 780px)');
+    const onChange = e => setWide(e.matches);
+    setWide(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  return <AdSlot unit={wide ? 'banner728' : 'banner300'} className={className} />;
+};
+
 const Home = ({ navigate, voice }) => {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState(null);
@@ -449,6 +544,11 @@ const Home = ({ navigate, voice }) => {
             {status.msg}
           </div>
         )}
+      </section>
+
+      <section className="shell">
+        <ResponsiveBanner />
+        <AdSlot unit="native" />
       </section>
 
       <Footer />
@@ -624,6 +724,9 @@ const Catalog = ({ kind, items, tags, setActiveItem, favorites, toggleFav }) => 
         </div>
 
         {showAddOwn && <AddOwnModal kind={kind} onSave={handleSave} onClose={() => setShowAddOwn(false)} />}
+
+        <ResponsiveBanner />
+
         <div className="catalog-grid">
           <button className="catalog-card add-card" onClick={() => setShowAddOwn(true)}>
             <div className="thumb" />
@@ -660,6 +763,8 @@ const Catalog = ({ kind, items, tags, setActiveItem, favorites, toggleFav }) => 
             );
           })}
         </div>
+
+        <AdSlot unit="native" />
       </section>
     </main>
   );

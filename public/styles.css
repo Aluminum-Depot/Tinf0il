@@ -1567,3 +1567,20 @@ html.cursor-in-iframe * { cursor: auto !important; }
 .catalog-card:hover .fav-btn { opacity: 1; }
 .fav-btn.active { opacity: 1; color: #e07090; }
 .fav-btn:hover { color: #e07090; }
+
+/* ── ads ── */
+/* No reserved min-height: a blocked unit should collapse to nothing rather than
+   leave a hole, since a good share of this traffic runs an adblocker. */
+.ad-slot {
+  margin: 28px 0;
+}
+.ad-slot > div:empty { display: none; }
+/* Centered rather than flexed: the native unit's container needs the full shell
+   width, so only the fixed-size banner iframe gets centered. */
+.ad-frame {
+  border: 0;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  color-scheme: light;
+}
