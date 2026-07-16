@@ -136,7 +136,23 @@ const FloatingLogo = () => {
       '.hero-actions a.discord-btn',
       '.hero .status-line',
       '.footer',
+      /* Ads bounce the ball too: resting the logo on a unit obstructs it, which
+         is both ugly and something ad networks treat as a policy problem. */
+      '.ad-slot',
     ];
+
+    /* Ceiling for the ball. The banner sits directly under the topbar on home,
+       so the topbar's bottom alone would let the logo start on top of it. */
+    function topLimit() {
+      const topbar = document.querySelector('.topbar');
+      const topAd = document.querySelector('.ad-top .ad-slot');
+      let y = topbar ? topbar.getBoundingClientRect().bottom : 56;
+      if (topAd) {
+        const r = topAd.getBoundingClientRect();
+        if (r.height > 4) y = Math.max(y, r.bottom);
+      }
+      return y;
+    }
 
     function collectObstacles() {
       const rects = [];
@@ -197,10 +213,8 @@ const FloatingLogo = () => {
       const h1 = document.querySelector('.hero h1');
       if (h1) {
         const rect = h1.getBoundingClientRect();
-        const topbar = document.querySelector('.topbar');
-        const top = topbar ? topbar.getBoundingClientRect().bottom : 56;
         p.x = window.innerWidth / 2 - SIZE / 2;
-        p.y = Math.max(top + 4, rect.top - SIZE - 44);
+        p.y = Math.max(topLimit() + 4, rect.top - SIZE - 44);
       }
       el.style.transform = `translate(${p.x}px, ${p.y}px)`;
     });
@@ -232,8 +246,7 @@ const FloatingLogo = () => {
 
       resolveAllObstacles();
 
-      const topbar = document.querySelector('.topbar');
-      const topBound = topbar ? topbar.getBoundingClientRect().bottom : 56;
+      const topBound = topLimit();
       const maxX = window.innerWidth - SIZE;
       const maxY = window.innerHeight - SIZE;
       if (p.x < 0) {
@@ -518,7 +531,7 @@ const Home = ({ navigate, voice }) => {
     <main className="home">
       <FloatingLogo />
 
-      <section className="shell">
+      <section className="shell ad-top">
         <ResponsiveBanner />
       </section>
 
