@@ -725,7 +725,7 @@ a {
 .load-side-top {
   display: flex;
   justify-content: flex-end;
-  margin: -4px -4px 8px 0;
+  margin: -4px -4px 2px 0;
 }
 
 .load-side-collapse,
@@ -752,21 +752,31 @@ a {
   min-height: 0;
 }
 
+/* Tightened to clear headroom for the 160x600 below: the stack above the ad has
+   to stay under ~280px or the aside starts scrolling on a 1080p screen. */
 .load-side-body img {
-  width: 72px;
-  height: 72px;
+  width: 52px;
+  height: 52px;
   border-radius: 8px;
   object-fit: cover;
 }
 
 .load-side-body h1 {
-  margin: 14px 0 8px;
+  margin: 10px 0 6px;
   font-size: 1.35rem;
   line-height: 1.2;
 }
 
+/* Clamped so a long description can't push the ad back into overflow. */
+.load-side-body p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .load-side-body .load-side-actions {
-  margin-top: 1rem;
+  margin-top: 12px;
 }
 
 .load-side-actions {
@@ -778,7 +788,7 @@ a {
 /* 160x600 fits the 227-267px usable column with room to spare; the aside already
    scrolls (overflow: auto) if the viewport is too short for the full height. */
 .load-side-ad {
-  margin-top: 20px;
+  margin-top: 12px;
   display: flex;
   justify-content: center;
 }

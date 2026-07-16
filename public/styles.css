@@ -358,14 +358,9 @@ main {
 }
 
 /* ── hero ── */
-/* flex:1 alone only centers while there's free space in main to absorb — once
-   anything else (ads, footer) fills the column the hero collapses to its content
-   height and rides up under the topbar. min-height floors it at one full screen
-   so it centers regardless of what's stacked below; flex:1 still lets it grow on
-   taller viewports. */
 .hero {
   flex: 1;
-  min-height: calc(100dvh - var(--topbar-h));
+  min-height: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -373,6 +368,21 @@ main {
   justify-content: center;
   text-align: center;
   gap: 32px;
+}
+
+/* Home fits one screen exactly: banner under the topbar, native under the footer,
+   hero absorbing whatever is left over — so nothing scrolls. Desktop only. Below
+   780px the banner swaps to the 300x250 and the native unit stacks into a tall
+   column, which together are far too tall to fit; there the page just scrolls. */
+@media (min-width: 780px) {
+  main.home {
+    height: calc(100dvh - var(--topbar-h));
+    overflow: hidden;
+  }
+
+  main.home .ad-slot {
+    margin: 10px 0;
+  }
 }
 
 .hero-label {

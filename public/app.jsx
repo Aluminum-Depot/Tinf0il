@@ -515,8 +515,13 @@ const Home = ({ navigate, voice }) => {
   };
 
   return (
-    <main>
+    <main className="home">
       <FloatingLogo />
+
+      <section className="shell">
+        <ResponsiveBanner />
+      </section>
+
       <section className="shell hero">
         <h1>probe the internet privately. <em>{voice.headline ? voice.headline : splash}</em></h1>
         <p className="hero-sub">{voice.lede}</p>
@@ -546,12 +551,11 @@ const Home = ({ navigate, voice }) => {
         )}
       </section>
 
+      <Footer />
+
       <section className="shell">
-        <ResponsiveBanner />
         <AdSlot unit="native" />
       </section>
-
-      <Footer />
     </main>
   );
 };
