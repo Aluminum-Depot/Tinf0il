@@ -1198,7 +1198,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
       <section className="shell settings-wrap">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <DomainPanel />
+          <DomainPanel user={user} onShowAuth={onShowAuth} />
 
           <div className="panel">
             <span className="panel-tag">// tab cloak</span>
@@ -1418,7 +1418,7 @@ const ACM_LABELS = {
   failed: { text: 'failed — check your cname', tone: 'bad' },
 };
 
-const DomainPanel = () => {
+const DomainPanel = ({ user, onShowAuth }) => {
   const [domain, setDomain] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -1437,9 +1437,13 @@ const DomainPanel = () => {
     if (busy) return;
     setErr(''); setBusy(true);
     try {
+      const token = user ? await user.getIdToken() : null;
       const res = await fetch('/api/domains', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ domain }),
       });
       const data = await res.json();
@@ -1476,22 +1480,35 @@ const DomainPanel = () => {
       <h3>bring your own domain</h3>
       <p className="h-sub">point a domain at tinf0il and get your own private link. https is automatic.</p>
 
-      <form className="field" onSubmit={submit} style={{ marginTop: 16 }}>
-        <span className="field-label">your domain</span>
-        <input
-          placeholder="meals.mooo.com"
-          value={domain}
-          onChange={e => { setDomain(e.target.value); setErr(''); }}
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck="false"
-          required
-        />
-        <button className="btn accent" type="submit" disabled={busy} style={{ marginTop: 10 }}>
-          {busy ? '...' : result ? 'check again' : 'claim it'}
-        </button>
-      </form>
-      {err && <p className="auth-err">{err}</p>}
+      {!user ? (
+        <>
+          <p className="h-sub" style={{ marginTop: 14 }}>
+            sign in first — domains are tied to your account so you can check on them later.
+          </p>
+          <button className="btn accent" type="button" onClick={onShowAuth} style={{ marginTop: 12 }}>
+            sign in
+          </button>
+        </>
+      ) : (
+        <>
+          <form className="field" onSubmit={submit} style={{ marginTop: 16 }}>
+            <span className="field-label">your domain</span>
+            <input
+              placeholder="meals.mooo.com"
+              value={domain}
+              onChange={e => { setDomain(e.target.value); setErr(''); }}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck="false"
+              required
+            />
+            <button className="btn accent" type="submit" disabled={busy} style={{ marginTop: 10 }}>
+              {busy ? '...' : result ? 'check again' : 'claim it'}
+            </button>
+          </form>
+          {err && <p className="auth-err">{err}</p>}
+        </>
+      )}
 
       {result && (
         <>

@@ -39,10 +39,15 @@ const RESERVED_SUFFIX = "tinf0il.site";
 /** An unconfirmed domain holds a slot in the app's domain quota; reap it after this. */
 const DOMAIN_GRACE_MS = 24 * 60 * 60 * 1000;
 const DOMAIN_REAP_INTERVAL_MS = 6 * 60 * 60 * 1000;
-/** Successful claims per IP per hour. */
+/** Public web API key, same one the client uses. Enables account-keyed limits. */
+const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
+/** Successful claims per signed-in account per hour. */
 const DOMAIN_CLAIM_LIMIT = 3;
-/** Attempts (including rejected ones) per IP per hour — stops DNS-lookup hammering. */
-const DOMAIN_ATTEMPT_LIMIT = 20;
+/**
+ * Attempts per IP per hour. Only a coarse anti-hammering backstop — a whole
+ * school shares one address, so this must stay well clear of real usage.
+ */
+const DOMAIN_ATTEMPT_LIMIT = 120;
 const DOMAIN_RATE_WINDOW_MS = 60 * 60 * 1000;
 /** Ceiling on unconfirmed domains, so nobody can fill the app's domain quota. */
 const MAX_PENDING_DOMAINS = 50;
@@ -736,6 +741,43 @@ function domainsConfigured() {
 	return Boolean(HEROKU_API_KEY && HEROKU_APP);
 }
 
+const idTokenCache = new Map();
+
+/**
+ * Resolve a Firebase ID token to a uid via Google's own lookup, which validates
+ * signature and expiry for us — no service-account key needed, just the public
+ * web API key the client already ships.
+ */
+async function uidFromToken(header) {
+	const token = /^Bearer (.+)$/i.exec(String(header || ""))?.[1];
+	if (!token || !FIREBASE_API_KEY) return null;
+
+	const hit = idTokenCache.get(token);
+	if (hit && hit.expires > Date.now()) return hit.uid;
+
+	try {
+		const res = await fetch(
+			`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ idToken: token }),
+			},
+		);
+		if (!res.ok) return null;
+		const body = await res.json();
+		const uid = body?.users?.[0]?.localId || null;
+		if (uid) {
+			if (idTokenCache.size > 2000) idTokenCache.clear();
+			// well inside Firebase's 1h token lifetime
+			idTokenCache.set(token, { uid, expires: Date.now() + 5 * 60 * 1000 });
+		}
+		return uid;
+	} catch {
+		return null;
+	}
+}
+
 /** Register a user-supplied domain and hand back the CNAME target Heroku assigns it. */
 app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 	if (!domainsConfigured()) {
@@ -749,7 +791,14 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 		return res.status(400).json({ error: "That domain is reserved." });
 	}
 	if (!takeToken(domainAttempts, req.ip, DOMAIN_ATTEMPT_LIMIT)) {
-		return res.status(429).json({ error: "Too many attempts. Try again in an hour." });
+		return res.status(429).json({ error: "Too many attempts from this network. Try again later." });
+	}
+
+	// Key claims to the account, not the address: a whole school shares one IP,
+	// so per-IP claim limits punish everyone for one person's fumbling.
+	const uid = await uidFromToken(req.get("authorization"));
+	if (FIREBASE_API_KEY && !uid) {
+		return res.status(401).json({ error: "Sign in to claim a domain." });
 	}
 
 	const claimable = await checkClaimable(host);
@@ -760,8 +809,8 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 			error: "Too many domains are waiting to be set up right now. Try again later.",
 		});
 	}
-	if (!takeToken(domainClaims, req.ip, DOMAIN_CLAIM_LIMIT)) {
-		return res.status(429).json({ error: "Too many domains claimed. Try again in an hour." });
+	if (!takeToken(domainClaims, uid || req.ip, DOMAIN_CLAIM_LIMIT)) {
+		return res.status(429).json({ error: "You've claimed 3 domains this hour. Try again later." });
 	}
 
 	const created = await herokuApi("POST", `/apps/${HEROKU_APP}/domains`, {
