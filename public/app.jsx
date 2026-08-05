@@ -279,45 +279,77 @@ const FloatingLogo = () => {
   );
 };
 
+/** Firebase now returns bare "Firebase: Error (auth/CODE)." strings, so the code
+ *  is the only thing worth reading — the message has nothing left in it. */
+const AUTH_ERRORS = {
+  'auth/invalid-login-credentials': 'wrong email or password.',
+  'auth/invalid-credential': 'wrong email or password.',
+  'auth/wrong-password': 'wrong email or password.',
+  'auth/user-not-found': 'no account with that email.',
+  'auth/invalid-email': "that doesn't look like a valid email.",
+  'auth/missing-password': 'enter a password.',
+  'auth/missing-email': 'enter your email.',
+  'auth/email-already-in-use': 'an account with that email already exists.',
+  'auth/weak-password': 'password needs to be at least 6 characters.',
+  'auth/too-many-requests': 'too many attempts. wait a minute, then try again.',
+  'auth/network-request-failed': 'network problem — check your connection.',
+  'auth/user-disabled': 'that account has been disabled.',
+  'auth/operation-not-allowed': 'that sign-in method is turned off.',
+};
+
 const AuthModal = ({ onClose }) => {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [err, setErr] = useState('');
+  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const clearErr = () => setErr('');
+  const clearErr = () => { setErr(''); setNotice(''); };
 
-  const fmtErr = (e) =>
-    (e.message || 'something went wrong')
+  const fmtErr = (e) => {
+    if (AUTH_ERRORS[e?.code]) return AUTH_ERRORS[e.code];
+    const msg = (e?.message || '')
       .replace('Firebase: ', '')
-      .replace(/ \(auth\/[^)]+\)\.?$/, '');
+      .replace(/ \(auth\/[^)]+\)\.?$/, '')
+      .trim();
+    return msg && msg.toLowerCase() !== 'error' ? msg : 'something went wrong. try again.';
+  };
 
   const submit = async (ev) => {
     ev.preventDefault();
-    setBusy(true); setErr('');
+    setBusy(true); setErr(''); setNotice('');
     try {
+      if (mode === 'reset') {
+        try {
+          await window.fbAuth.sendPasswordResetEmail(email.trim());
+        } catch (e) {
+          // answer the same way either way, so this can't be used to check
+          // whether an address has an account
+          if (e.code !== 'auth/user-not-found') throw e;
+        }
+        setNotice("if an account exists for that email, a reset link is on its way. check your spam folder.");
+        return;
+      }
       if (mode === 'login') {
         await window.fbAuth.signInWithEmailAndPassword(email, password);
       } else {
         const cred = await window.fbAuth.createUserWithEmailAndPassword(email, password);
         if (displayName.trim()) await cred.user.updateProfile({ displayName: displayName.trim() });
+        // don't block account creation if the mail fails to send — it can be
+        // resent from settings
+        await cred.user.sendEmailVerification().catch(() => {});
       }
       onClose();
     } catch (e) { setErr(fmtErr(e)); }
     finally { setBusy(false); }
   };
 
-  const googleSignIn = async () => {
-    setBusy(true); setErr('');
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await window.fbAuth.signInWithPopup(provider);
-      onClose();
-    } catch (e) { setErr(fmtErr(e)); }
-    finally { setBusy(false); }
-  };
+  const TITLES = { login: 'sign in', signup: 'create account', reset: 'reset password' };
+  const ACTIONS = { login: 'sign in', signup: 'sign up', reset: 'send reset link' };
+
+  const go = (m) => { setMode(m); setErr(''); setNotice(''); };
 
   return (
     <div className="modal-bg" onClick={onClose}>
@@ -325,26 +357,32 @@ const AuthModal = ({ onClose }) => {
         <div className="modal-head">
           <div className="modal-meta">
             <div className="kind">tinf0il</div>
-            <h3>{mode === 'login' ? 'sign in' : 'create account'}</h3>
+            <h3>{TITLES[mode]}</h3>
           </div>
         </div>
+        {mode === 'reset' && (
+          <p className="auth-hint">enter your email and we'll send you a link to set a new password.</p>
+        )}
         <form className="auth-fields" onSubmit={submit}>
           {mode === 'signup' && (
             <input className="auth-input" placeholder="display name (optional)" value={displayName} onChange={e => { setDisplayName(e.target.value); clearErr(); }} />
           )}
           <input className="auth-input" type="email" placeholder="email" value={email} onChange={e => { setEmail(e.target.value); clearErr(); }} required />
-          <input className="auth-input" type="password" placeholder="password" value={password} onChange={e => { setPassword(e.target.value); clearErr(); }} required minLength={6} />
+          {mode !== 'reset' && (
+            <input className="auth-input" type="password" placeholder="password" value={password} onChange={e => { setPassword(e.target.value); clearErr(); }} required minLength={6} />
+          )}
           {err && <p className="auth-err">{err}</p>}
-          <button className="btn accent" type="submit" disabled={busy}>{busy ? '...' : mode === 'login' ? 'sign in' : 'sign up'}</button>
+          {notice && <p className="auth-notice">{notice}</p>}
+          <button className="btn accent" type="submit" disabled={busy}>{busy ? '...' : ACTIONS[mode]}</button>
         </form>
-        <div className="auth-divider"><span>or</span></div>
-        <button className="btn google-btn" type="button" onClick={googleSignIn} disabled={busy}>
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
-          continue with google
-        </button>
+        {mode === 'login' && (
+          <p className="auth-switch">
+            <button type="button" onClick={() => go('reset')}>forgot password?</button>
+          </p>
+        )}
         <p className="auth-switch">
-          {mode === 'login' ? "don't have an account? " : 'already have an account? '}
-          <button type="button" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setErr(''); }}>
+          {mode === 'signup' || mode === 'reset' ? 'already have an account? ' : "don't have an account? "}
+          <button type="button" onClick={() => go(mode === 'login' ? 'signup' : 'login')}>
             {mode === 'login' ? 'sign up' : 'sign in'}
           </button>
         </p>
@@ -998,6 +1036,57 @@ const CURSOR_OPTIONS = [
   { id: 'off',   label: 'off',   preview: <div className="cp-off">↖</div> },
 ];
 
+const VerifyNotice = ({ user }) => {
+  const [state, setState] = useState('idle');
+
+  const resend = async () => {
+    setState('sending');
+    try {
+      await user.sendEmailVerification();
+      setState('sent');
+    } catch (e) {
+      setState(e.code === 'auth/too-many-requests' ? 'throttled' : 'failed');
+    }
+  };
+
+  // emailVerified is baked into the cached token, so it stays stale until the
+  // user object is refreshed from the server
+  const recheck = async () => {
+    setState('checking');
+    await user.reload().catch(() => {});
+    setState(user.emailVerified ? 'verified' : 'still-unverified');
+  };
+
+  const MESSAGES = {
+    sent: 'verification email sent. check your spam folder.',
+    throttled: 'too many requests. wait a minute, then try again.',
+    failed: "couldn't send that. try again in a moment.",
+    verified: 'verified — refresh the page.',
+    'still-unverified': 'not verified yet. click the link in your email first.',
+  };
+
+  return (
+    <div className="verify-notice">
+      <p className="auth-hint" style={{ margin: 0 }}>
+        your email isn&apos;t verified yet.
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+        <button className="btn" type="button" onClick={resend} disabled={state === 'sending'}>
+          {state === 'sending' ? '...' : 'resend email'}
+        </button>
+        <button className="btn" type="button" onClick={recheck} disabled={state === 'checking'}>
+          {state === 'checking' ? '...' : 'i verified it'}
+        </button>
+      </div>
+      {MESSAGES[state] && (
+        <p className={state === 'failed' || state === 'throttled' || state === 'still-unverified' ? 'auth-err' : 'auth-notice'}>
+          {MESSAGES[state]}
+        </p>
+      )}
+    </div>
+  );
+};
+
 const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setReduce, bigText, setBigText, user, onSignOut, onShowAuth, onCloakSave, syncStatus }) => {
   const initial = useMemo(() => readInitialCloak(), []);
   const [cloakPresetId, setCloakPresetId] = useState(initial.cloakPresetId);
@@ -1300,6 +1389,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                     <div className="acct-email">{user.email}</div>
                   </div>
                 </div>
+                {!user.emailVerified && <VerifyNotice user={user} />}
                 {syncStatus && <p className={cx('sync-status', syncStatus === 'saved' && 'ok')}>{syncStatus}</p>}
                 <button className="btn" style={{ marginTop: 12 }} onClick={onSignOut}>sign out</button>
               </>
