@@ -1795,11 +1795,17 @@ const App = () => {
   // ── auth listener ──
   useEffect(() => {
     if (!window.fbAuth) return;
+    // Firebase propagates auth state through these listeners, so anything that
+    // stalls in here leaves sign-in and sign-up hanging. Firestore retries with
+    // backoff rather than failing fast, so it must be bounded.
+    const withTimeout = (p, ms = 8000) =>
+      Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('sync timed out')), ms))]);
+
     const unsub = window.fbAuth.onAuthStateChanged(async (u) => {
       setUser(u);
       if (u) {
         try {
-          const snap = await window.fbDb.collection('proxy-users').doc(u.uid).get();
+          const snap = await withTimeout(window.fbDb.collection('proxy-users').doc(u.uid).get());
           if (snap.exists) {
             const data = snap.data();
             applyCloudSettings(data.settings);
@@ -1809,14 +1815,15 @@ const App = () => {
             }
             setSyncStatus('saved');
           } else {
-            await window.fbDb.collection('proxy-users').doc(u.uid).set({
+            // offline writes stay pending until the server acks, so bound this too
+            await withTimeout(window.fbDb.collection('proxy-users').doc(u.uid).set({
               email: u.email,
               displayName: u.displayName || '',
               photoURL: u.photoURL || '',
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
               settings: cloudSettings(),
               favorites,
-            });
+            }));
             setSyncStatus('saved');
           }
         } catch { setSyncStatus('sync failed'); }
