@@ -623,7 +623,11 @@ const Home = ({ navigate, voice }) => {
   );
 };
 
-const Proxy = ({ navigate }) => {
+// NB: must not be named `Proxy`. A top-level const in a classic script creates a
+// global lexical binding that shadows globalThis.Proxy for every script on the
+// page — Firebase's bundled idb then called this component instead of the real
+// constructor, throwing "Invalid hook call" inside sign-up.
+const ProxyPanel = ({ navigate }) => {
   const [query, setQuery] = useState('');
   const [history, setHistory] = useState([
     { url: 'youtube.com', t: '2m ago' },
