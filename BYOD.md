@@ -1,103 +1,126 @@
-# A guide on how to BYOD (Bring Your Own Domain) to Tinf0il
+# How to BYOD (Bring Your Own Domain) to Tinf0il
 
-**FreeDNS domains now work.** You no longer need to buy a domain, make a Cloudflare
-account, or touch nameservers. One DNS record is the whole setup.
+Point a domain you own at Tinf0il and get your own private link, with HTTPS set
+up automatically. Takes about five minutes.
 
 ---
 
 ## 1. Get a domain
 
-**Free — recommended:** [FreeDNS](https://freedns.afraid.org/) lets you create a
-subdomain on a shared domain at no cost. Register, then open
-[the shared domain list](https://freedns.afraid.org/domain/registry/).
+**Recommended — buy one.** A real domain is far less likely to be blocked than a
+free one, it's yours alone, and nobody else's behaviour can get it filtered.
+First-year prices are often under $2.
 
-> **Pick your shared domain carefully.** Certificates are rate-limited per
-> *registered domain*, and on a shared FreeDNS domain you share that limit with
-> every stranger using it. Prefer a domain on the
-> [Public Suffix List](https://publicsuffix.org/list/) — those are limited per
-> *subdomain* instead, so you get your own quota. `mooo.com`, `crabdance.com`,
-> `us.to`, and `strangled.net` are usually on it. If your link doesn't go live,
-> a crowded shared domain is the likeliest reason — try another one.
+- https://porkbun.com/ (cheapest for most TLDs — check online for coupon codes)
+- https://www.namecheap.com/
+- https://www.ionos.com/
+- https://www.godaddy.com/
 
-**Paid:** any registrar works — [Porkbun](https://porkbun.com/),
-[Namecheap](https://www.namecheap.com/), [IONOS](https://www.ionos.com/).
+**Free alternative — FreeDNS.** https://freedns.afraid.org/ gives you a subdomain
+of a shared domain at no cost. It works, but shared domains get blocked far more
+often, because a filter blocking one person's link blocks everyone's.
 
----
-
-## 2. Register your domain with Tinf0il
-
-Go to **https://tinf0il.site/settings** — the **custom domain** panel is at the
-top. Enter the domain you just created, and
-submit. You'll get back a **DNS target** unique to your domain, looking something
-like `salty-coconut-974s6k9xglor8s8wivf67c2n.herokudns.com`.
-
-Copy it — you need it in the next step.
+If you go free, pick a shared domain that appears on the Public Suffix List
+(https://publicsuffix.org/list/) — `mooo.com`, `crabdance.com`, `us.to`. Those get
+their own certificate quota. On a domain that isn't listed, you share one weekly
+certificate limit with every stranger using it, and issuing can just stop.
 
 ---
 
-## 3. Create the DNS record
+## 2. Sign in to Tinf0il
 
-**On FreeDNS:** go to [Subdomains](https://freedns.afraid.org/subdomain/) →
-`Add a subdomain`, and set:
+Domains are tied to your account, so you can check on them later.
 
-| Field | Value |
-|---|---|
-| Type | `CNAME` |
-| Subdomain | the one you chose (e.g. `meals`) |
-| Domain | your chosen shared domain |
-| Destination | the DNS target from step 2 |
+Go to https://tinf0il.site/settings and sign in (or create an account) from the
+button in the top right.
 
-**On a registrar:** add a `CNAME` record with host `www` pointing to your DNS
-target. (Apex domains — `example.com` with no `www` — need an `ALIAS` or `ANAME`
-record instead; Porkbun and Cloudflare both support this, many registrars don't.)
+---
 
-Then click **Save**.
+## 3. Claim your domain
 
-> Destination is a **hostname only** — no `https://`, no trailing slash, no path.
-> Do **not** use the "Forward to a URL" option: URL forwarding serves your site
+Still on https://tinf0il.site/settings — the **custom domain** panel is at the top
+of the page.
+
+Type your domain in and press **claim it**. You'll get back a **DNS target** that
+looks something like:
+
+```
+amorphous-okra-hlrccn5gi7amb98iu3cmgdpr.herokudns.com
+```
+
+Copy it. That value is unique to your domain — don't use one from a screenshot or
+from someone else.
+
+---
+
+## 4. Point your domain at it
+
+Go to your registrar's DNS settings and add **one** record.
+
+**For a subdomain** like `go.yourdomain.com` — the easy option:
+
+- Type: `CNAME`
+- Name / Host: `go` (or `www`, or whatever you like)
+- Value / Target: the DNS target from step 3
+
+**For the bare domain** like `yourdomain.com` with no prefix:
+
+- Type: `ALIAS` or `ANAME` (**not** CNAME — the DNS standard forbids CNAME here)
+- Name / Host: `@`
+- Value / Target: the DNS target from step 3
+
+Porkbun and Cloudflare both support ALIAS/ANAME. Many registrars don't — if yours
+doesn't offer it, use a subdomain instead.
+
+**On FreeDNS:** Subdomains → Add a subdomain → Type `CNAME`, fill in your
+subdomain, and paste the DNS target as the Destination.
+
+> **Paste the hostname only** — no `https://`, no trailing slash, no path.
+>
+> **Do not use "URL forwarding" / "redirect" / "cloaking".** Those serve the site
 > inside a frame, which breaks the proxy, your login, and your saved settings.
 
-> Register your domain **before** setting the CNAME. The target is generated when
-> you register, so there's nothing to point at until step 2 is done.
-
 ---
 
-## 4. Wait
+## 5. Wait
 
-That's it. Your link goes live on its own, usually within a few minutes, though
-DNS can take up to an hour to propagate. HTTPS is set up automatically — there is
-nothing to configure.
+That's it. HTTPS is issued automatically — there is nothing to configure and no
+certificate to install.
 
-You can check progress any time at **https://tinf0il.site/settings** — it will
-tell you whether your CNAME is detected and whether your certificate has been
-issued yet.
+Your link usually goes live within a few minutes, though DNS can take up to an
+hour to spread.
 
-> **Don't delete the record once it works.** If your domain stops pointing at
-> Tinf0il for more than a day, it gets released automatically and you'll have to
-> register it again.
+Check progress any time under **your domains** in that same settings panel. It
+shows whether your record has been detected and whether your certificate is ready.
 
 ---
 
 ## Troubleshooting
 
-**I see a "Welcome! ... is being shared via Free DNS" page**
-Your computer cached the old DNS answer. Run `ipconfig /flushdns` (Windows) or
-`sudo dscacheutil -flushcache` (Mac), clear Chrome's cache at
-`chrome://net-internals/#dns`, then hard-reload with `Ctrl+Shift+R`. Or just wait
-an hour.
+**Still shows "waiting for dns"**
+The record hasn't spread yet. Give it up to an hour. Double-check you used the
+exact DNS target from step 3, with no `https://` and no trailing slash.
 
-**Certificate warning, or the page won't load over HTTPS**
-Check the custom domain panel on https://tinf0il.site/settings. If it says your CNAME isn't detected, the
-record is wrong or hasn't propagated. If the CNAME is detected but the
-certificate is still pending after ~30 minutes, your shared domain has likely hit
-its certificate limit — see the note in step 1 and try a different one.
+**"That domain is already in use elsewhere"**
+Someone else already has it registered. If it's genuinely yours and you moved it
+from another host, remove it there first.
 
-**It only works on `http://`**
-Always use `https://`. The proxy cannot run without it.
+**"You've claimed 3 domains this hour"**
+That's the limit per account per hour. Re-entering a domain you already claimed
+doesn't count toward it — that's just checking status.
+
+**The site loads for everyone else but times out for you**
+Try it in a private/incognito window. If it works there, an extension in your
+normal browser is blocking it — school and "study helper" extensions often filter
+proxy domains. Turn extensions off one at a time to find it.
+
+**I never pointed it and now it's gone**
+Domains that are never pointed at Tinf0il are released after 24 hours to free up
+space. Just claim it again. Once your link is live it stays.
 
 ---
 
-## Contribute to the community
+## Share it
 
-If you want to help others, post your link publicly in <#1194418751177769010> so
-anyone can use it. This will not affect the performance of your link at all.
+Once your link works, post it in this channel so others can use it. Sharing it
+doesn't slow your link down at all.

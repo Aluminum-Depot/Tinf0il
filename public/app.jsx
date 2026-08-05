@@ -1614,11 +1614,19 @@ const DomainPanel = ({ user, onShowAuth }) => {
       )}
 
       <p className="h-sub" style={{ fontSize: 13, marginTop: 16 }}>
-        no domain? grab a free subdomain at{' '}
-        <a href="https://freedns.afraid.org/" target="_blank" rel="noreferrer">freedns</a>. pick a shared
-        domain from the{' '}
+        no domain yet? buying one is the better move — a domain of your own is far less
+        likely to get blocked than a shared free one, and they start under $2 a year:{' '}
+        <a href="https://porkbun.com/" target="_blank" rel="noreferrer">porkbun</a>,{' '}
+        <a href="https://www.namecheap.com/" target="_blank" rel="noreferrer">namecheap</a>,{' '}
+        <a href="https://www.ionos.com/" target="_blank" rel="noreferrer">ionos</a>, or{' '}
+        <a href="https://www.godaddy.com/" target="_blank" rel="noreferrer">godaddy</a>.
+      </p>
+      <p className="h-sub" style={{ fontSize: 13, marginTop: 10 }}>
+        want free instead? <a href="https://freedns.afraid.org/" target="_blank" rel="noreferrer">freedns</a>{' '}
+        works — pick a shared domain from the{' '}
         <a href="https://publicsuffix.org/list/" target="_blank" rel="noreferrer">public suffix list</a>{' '}
-        (mooo.com, crabdance.com, us.to) so you get your own certificate quota.
+        (mooo.com, crabdance.com, us.to) so you get your own certificate quota instead of
+        sharing one with strangers.
       </p>
     </div>
   );
