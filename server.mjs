@@ -741,6 +741,14 @@ async function checkClaimable(host) {
 	return { ok: true };
 }
 
+/** Whether the hostname's CNAME actually resolves to the target Heroku gave it. */
+async function isPointedAt(host, target) {
+	if (!target) return false;
+	const cname = await dns.resolveCname(host).catch(() => []);
+	const want = String(target).toLowerCase().replace(/\.$/, "");
+	return cname.some((t) => t.toLowerCase().replace(/\.$/, "") === want);
+}
+
 let pendingCache = { count: 0, at: 0 };
 
 async function pendingDomainCount() {
@@ -823,6 +831,7 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 		return res.json({
 			domain: host,
 			target: held.body?.cname,
+			pointed: await isPointedAt(host, held.body?.cname),
 			status: held.body?.acm_status || "pending",
 		});
 	}
@@ -859,6 +868,7 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 				return res.json({
 					domain: host,
 					target: existing.body?.cname,
+					pointed: await isPointedAt(host, existing.body?.cname),
 					status: existing.body?.acm_status || "pending",
 				});
 			}
@@ -875,6 +885,8 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 	res.json({
 		domain: host,
 		target: created.body?.cname,
+		// false on a fresh claim — the record can't exist before we hand out the target
+		pointed: false,
 		status: created.body?.acm_status || "pending",
 	});
 });
@@ -891,13 +903,11 @@ app.get("/api/domains/:host", async (req, res) => {
 	if (!found.ok) return res.status(404).json({ error: "That domain is not registered." });
 
 	const target = found.body?.cname;
-	const cname = await dns.resolveCname(host).catch(() => []);
-	const pointed = cname.some((t) => t.toLowerCase().replace(/\.$/, "") === String(target).toLowerCase());
 
 	res.json({
 		domain: host,
 		target,
-		pointed,
+		pointed: await isPointedAt(host, target),
 		status: found.body?.acm_status || "pending",
 		detail: found.body?.acm_status_reason || null,
 	});
