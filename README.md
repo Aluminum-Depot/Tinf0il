@@ -1,21 +1,21 @@
 # tinf0il
 
-A clean, fast proxy portal built on [Scramjet](https://github.com/MercuryWorkshop/scramjet) with libcurl transport. Browse, play, stream, and work — privately.
+A clean, fast proxy portal built on [Scramjet](https://github.com/MercuryWorkshop/scramjet) with libcurl transport. Browse, play, stream, and work, privately.
 
 ---
 
 ## Features
 
 ### Proxy & Privacy
-- **Scramjet proxy** — full URL rewriting via service worker, libcurl transport
-- **Tab cloaking** — spoof tab title, favicon, and address bar host; presets for Schoology, Canvas, and Google Classroom; or import from any URL
-- **Stealth routing** — strips referrers and telemetry on every request
-- **No logs** — zero telemetry, no tracking
+- **Scramjet proxy**: full URL rewriting via service worker, libcurl transport
+- **Tab cloaking**: spoof tab title, favicon, and address bar host; presets for Schoology, Canvas, and Google Classroom; or import from any URL
+- **Stealth routing**: strips referrers and telemetry on every request
+- **No logs**: zero telemetry, no tracking
 
 ### Games & Apps
-- **Game catalog** — thousands of unblocked games via [3kh0 lite](https://github.com/3kh0/3kh0-lite), filterable by tag
-- **App catalog** — curated list of web apps, one tap to launch
-- **Favorites** — pin games and apps for quick access
+- **Game catalog**: thousands of unblocked games via [3kh0 lite](https://github.com/3kh0/3kh0-lite), filterable by tag
+- **App catalog**: curated list of web apps, one tap to launch
+- **Favorites**: pin games and apps for quick access
 
 ### tinf0il TV (`/tv`)
 A full-featured streaming interface built on Next.js, embedded in the portal.
@@ -26,20 +26,20 @@ A full-featured streaming interface built on Next.js, embedded in the portal.
 - Multiple streaming servers per title with instant switching
 - Episode selector with per-season navigation
 - Auto Play and Auto Next episode
-- Light mode — dims the page when the player is active
-- Watch history — continue where you left off
-- Personal collection — save titles to a watchlist (requires account)
+- Light mode, dims the page when the player is active
+- Watch history, continue where you left off
+- Personal collection, save titles to a watchlist (requires account)
 - Ratings, cast info, and genre metadata
 - Comments section per title
 - Recommendations based on what you're watching
-- Share button — copies a direct link to clipboard
+- Share button, copies a direct link to clipboard
 
 **Live Sports**
 - Live and upcoming sports events, auto-refreshing every 60 seconds
 - Events grouped by sport (MMA, boxing, wrestling, rugby, AFL, football, basketball, baseball, hockey, cricket, tennis, golf, motor sports, and more)
 - Live vs. upcoming detection with real-time status
 - Multiple stream sources per event with numbered stream switching
-- Share button — copies a direct link to clipboard
+- Share button, copies a direct link to clipboard
 
 **Catalog**
 - Search across movies and TV shows simultaneously
@@ -47,15 +47,15 @@ A full-featured streaming interface built on Next.js, embedded in the portal.
 - Paginated results with bookmarkable page URLs (`/tv/catalog/2`)
 
 **General**
-- Deep linking — every page has a shareable URL (`/tv/sports`, `/tv/sports/watch/:id`, `/tv/watch/:id`)
+- Deep linking, every page has a shareable URL (`/tv/sports`, `/tv/sports/watch/:id`, `/tv/watch/:id`)
 - URL bar stays in sync as you navigate within the TV section
 - Direct URL access loads the correct page without going through the homepage
 
 ### Personalization
-- **Themes** — midnight, daylight, acid, bubblegum
-- **Custom cursor** — dot, crosshair, or off
-- **Settings sync** — preferences tied to your account via Firebase
-- **Panic key** — instantly switch tabs
+- **Themes**: midnight, daylight, acid, bubblegum
+- **Custom cursor**: dot, crosshair, or off
+- **Settings sync**: preferences tied to your account via Firebase
+- **Panic key**: instantly switch tabs
 
 ---
 

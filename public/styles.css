@@ -371,7 +371,7 @@ main {
 }
 
 /* Home fits one screen exactly: banner under the topbar, native under the footer,
-   hero absorbing whatever is left over — so nothing scrolls. Desktop only. Below
+   hero absorbing whatever is left over, so nothing scrolls. Desktop only. Below
    780px the banner swaps to the 300x250 and the native unit stacks into a tall
    column, which together are far too tall to fit; there the page just scrolls. */
 @media (min-width: 780px) {
@@ -1641,9 +1641,9 @@ html.cursor-in-iframe * { cursor: auto !important; }
 
 /* Rails centred in the gutters either side of the 860px shell. Each gutter is
    (100% - 860px) / 2, so centring a 160px rail puts it (gutter - 160px) / 2 from
-   the screen edge — which reduces to 25% - 295px, mirrored left and right. Fixed
+   the screen edge, which reduces to 25% - 295px, mirrored left and right. Fixed
    rather than sticky so they hold position on pages long enough to scroll.
-   Rendering is gated in JS at 1240px — see SideRails. */
+   Rendering is gated in JS at 1240px, see SideRails. */
 .side-rail {
   position: fixed;
   top: 50%;

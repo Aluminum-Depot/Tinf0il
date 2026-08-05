@@ -44,7 +44,7 @@ const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
 /** Successful claims per signed-in account per hour. */
 const DOMAIN_CLAIM_LIMIT = 3;
 /**
- * Attempts per IP per hour. Only a coarse anti-hammering backstop — a whole
+ * Attempts per IP per hour. Only a coarse anti-hammering backstop. A whole
  * school shares one address, so this must stay well clear of real usage.
  */
 const DOMAIN_ATTEMPT_LIMIT = 120;
@@ -559,31 +559,31 @@ const PAGE_META = {
 	home: {
 		title: "tinf0il · browse privately.",
 		description: "Bypass filters, play games, and route the web privately. Zero logs. No leaks. No ads.",
-		ogTitle: "tinf0il — the internet, unfiltered.",
-		ogDescription: "A proxy portal that actually works. Games, apps, streaming — all routed privately. No logs. No leaks.",
+		ogTitle: "tinf0il: the internet, unfiltered.",
+		ogDescription: "A proxy portal that actually works. Games, apps, streaming, all routed privately. No logs. No leaks.",
 	},
 	games: {
 		title: "tinf0il · games, unfiltered.",
-		description: "Hundreds of unblocked games, all proxied. No ads, no installs — just tap and play.",
-		ogTitle: "tinf0il Games — unblocked, unfiltered.",
+		description: "Hundreds of unblocked games, all proxied. No ads, no installs, just tap and play.",
+		ogTitle: "tinf0il Games: unblocked, unfiltered.",
 		ogDescription: "Hundreds of games, zero filters. No ads, no installs. Your school can't stop you now.",
 	},
 	apps: {
 		title: "tinf0il · apps, untangled.",
-		description: "Every web app you actually use, one tap away — all routed privately.",
-		ogTitle: "tinf0il Apps — untangled.",
-		ogDescription: "YouTube, Docs, everything you need — one tap away and fully proxied. No restrictions, no noise.",
+		description: "Every web app you actually use, one tap away, all routed privately.",
+		ogTitle: "tinf0il Apps: untangled.",
+		ogDescription: "YouTube, Docs, everything you need, one tap away and fully proxied. No restrictions, no noise.",
 	},
 	tv: {
-		title: "tinf0il TV — stream anything.",
+		title: "tinf0il TV: stream anything.",
 		description: "Movies and shows, proxied and ad-free. No account. No paywall. Just watch.",
-		ogTitle: "tinf0il TV — stream anything, anywhere.",
+		ogTitle: "tinf0il TV: stream anything, anywhere.",
 		ogDescription: "Movies and shows routed through tinf0il. No account. No paywall. No ads. Just hit play.",
 	},
 	chatroom: {
 		title: "tinf0il · chatroom",
 		description: "Join the tinf0il community. Talk proxy, games, and everything in between.",
-		ogTitle: "tinf0il Chatroom — come hang.",
+		ogTitle: "tinf0il Chatroom: come hang.",
 		ogDescription: "The official tinf0il community. Proxy tips, game recs, and the whole vibe. Come through.",
 	},
 	settings: {
@@ -594,7 +594,7 @@ const PAGE_META = {
 	},
 	about: {
 		title: "tinf0il · about",
-		description: "A lightweight proxy portal built on scramjet. Browse, play, work — privately. No logs. No leaks.",
+		description: "A lightweight proxy portal built on scramjet. Browse, play, work, privately. No logs. No leaks.",
 		ogTitle: "about tinf0il",
 		ogDescription: "Built on scramjet by Mercury Workshop. Zero trackers, zero logs, open source. The clean room the internet needed.",
 	},
@@ -729,7 +729,7 @@ function spendToken(bucket, key) {
  * Deliberately does NOT reject hostnames that currently resolve elsewhere:
  * anyone migrating a live domain needs it serving its old target right up
  * until they switch the record over. Claiming a domain you don't control gains
- * nothing anyway — no certificate issues until DNS points here, and the reaper
+ * nothing anyway. No certificate issues until DNS points here, and the reaper
  * releases it within the grace period.
  */
 async function checkClaimable(host) {
@@ -768,7 +768,7 @@ const idTokenCache = new Map();
 
 /**
  * Resolve a Firebase ID token to a uid via Google's own lookup, which validates
- * signature and expiry for us — no service-account key needed, just the public
+ * signature and expiry for us. No service-account key needed, just the public
  * web API key the client already ships.
  */
 async function uidFromToken(header) {
@@ -885,7 +885,7 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 	res.json({
 		domain: host,
 		target: created.body?.cname,
-		// false on a fresh claim — the record can't exist before we hand out the target
+		// false on a fresh claim, the record can't exist before we hand out the target
 		pointed: false,
 		status: created.body?.acm_status || "pending",
 	});

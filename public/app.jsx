@@ -280,7 +280,7 @@ const FloatingLogo = () => {
 };
 
 /** Firebase now returns bare "Firebase: Error (auth/CODE)." strings, so the code
- *  is the only thing worth reading — the message has nothing left in it. */
+ *  is the only thing worth reading. the message has nothing left in it. */
 const AUTH_ERRORS = {
   'auth/invalid-login-credentials': 'wrong email or password.',
   'auth/invalid-credential': 'wrong email or password.',
@@ -292,7 +292,7 @@ const AUTH_ERRORS = {
   'auth/email-already-in-use': 'an account with that email already exists.',
   'auth/weak-password': 'password needs to be at least 6 characters.',
   'auth/too-many-requests': 'too many attempts. wait a minute, then try again.',
-  'auth/network-request-failed': 'network problem — check your connection.',
+  'auth/network-request-failed': 'network problem. check your connection.',
   'auth/user-disabled': 'that account has been disabled.',
   'auth/operation-not-allowed': 'that sign-in method is turned off.',
 };
@@ -337,7 +337,7 @@ const AuthModal = ({ onClose }) => {
       } else {
         const cred = await window.fbAuth.createUserWithEmailAndPassword(email, password);
         if (displayName.trim()) await cred.user.updateProfile({ displayName: displayName.trim() });
-        // don't block account creation if the mail fails to send — it can be
+        // don't block account creation if the mail fails to send, it can be
         // resent from settings
         await cred.user.sendEmailVerification().catch(() => {});
       }
@@ -450,12 +450,12 @@ const Footer = () => (
    Two different embed mechanisms here, hence two render paths:
 
    - native: invoke.js hunts for `container-<id>` in the DOM at load time, so the
-     container must exist before the script runs — hence the manual append order
+     container must exist before the script runs, hence the manual append order
      rather than plain JSX.
 
    - banner: invoke.js reads a *global* `atOptions` set by an inline script just
      above it. Two banners on one page would clobber each other's globals and race,
-     so each one gets its own srcdoc iframe — a separate window, a separate
+     so each one gets its own srcdoc iframe: a separate window, a separate
      `atOptions`. This is also what keeps the ad's own DOM out of ours.
 
    Both re-mount on page change, which is what Adsterra expects for a fresh
@@ -625,7 +625,7 @@ const Home = ({ navigate, voice }) => {
 
 // NB: must not be named `Proxy`. A top-level const in a classic script creates a
 // global lexical binding that shadows globalThis.Proxy for every script on the
-// page — Firebase's bundled idb then called this component instead of the real
+// page. Firebase's bundled idb then called this component instead of the real
 // constructor, throwing "Invalid hook call" inside sign-up.
 const ProxyPanel = ({ navigate }) => {
   const [query, setQuery] = useState('');
@@ -997,7 +997,7 @@ const Tinf0ilTV = ({ theme }) => {
           <div className="tv-loading-inner">
             <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
             <span className="tv-loading-label">tinf<em>0</em>il TV</span>
-            <p className="tv-err">TV app isn't running — start the server then refresh.</p>
+            <p className="tv-err">TV app isn't running. start the server then refresh.</p>
           </div>
         </div>
       )}
@@ -1065,7 +1065,7 @@ const VerifyNotice = ({ user }) => {
     sent: 'verification email sent. check your spam folder.',
     throttled: 'too many requests. wait a minute, then try again.',
     failed: "couldn't send that. try again in a moment.",
-    verified: 'verified — refresh the page.',
+    verified: 'verified. refresh the page.',
     'still-unverified': 'not verified yet. click the link in your email first.',
   };
 
@@ -1207,7 +1207,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
           <div className="panel">
             <span className="panel-tag">// tab cloak</span>
             <h3>cloak</h3>
-            <p className="h-sub">pick a classroom tab, or paste any site — we&apos;ll pull title and icon.</p>
+            <p className="h-sub">pick a classroom tab, or paste any site, we&apos;ll pull title and icon.</p>
 
             <div className="cloak-browser-mock">
               <div className="cloak-tab-strip" role="tablist" aria-label="cloak preset">
@@ -1418,8 +1418,8 @@ const ACM_LABELS = {
   'cert issued': { text: 'live', tone: 'ok' },
   'in-progress': { text: 'issuing certificate...', tone: 'wait' },
   pending: { text: 'waiting for dns', tone: 'wait' },
-  failing: { text: 'failing — check your cname', tone: 'bad' },
-  failed: { text: 'failed — check your cname', tone: 'bad' },
+  failing: { text: 'failing, check your cname', tone: 'bad' },
+  failed: { text: 'failed, check your cname', tone: 'bad' },
 };
 
 const DomainPanel = ({ user, onShowAuth }) => {
@@ -1442,7 +1442,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
   /**
    * Heroku has no per-domain owner field, so the claim list lives on the user's
    * own document. Statuses always come from the server, never from what's stored
-   * here — a domain reaped for never being pointed shows up as released.
+   * here. A domain reaped for never being pointed shows up as released.
    */
   const loadMine = async () => {
     if (!user || !window.fbDb) return;
@@ -1453,7 +1453,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
         list.map(h => load(h).catch(() => ({ domain: h, status: 'released', pointed: false }))),
       );
       setMine(rows);
-    } catch { /* sync unavailable — the claim form still works */ }
+    } catch { /* sync unavailable, the claim form still works */ }
   };
 
   const remember = async host => {
@@ -1526,7 +1526,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
       {!user ? (
         <>
           <p className="h-sub" style={{ marginTop: 14 }}>
-            sign in first — domains are tied to your account so you can check on them later.
+            sign in first. domains are tied to your account so you can check on them later.
           </p>
           <button className="btn accent" type="button" onClick={onShowAuth} style={{ marginTop: 12 }}>
             sign in
@@ -1579,7 +1579,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
           )}
           <p className="h-sub" style={{ fontSize: 13, marginTop: 16 }}>
             {result.status === 'cert issued'
-              ? <>you're live — open <a href={`https://${result.domain}`} target="_blank" rel="noreferrer">https://{result.domain}</a></>
+              ? <>you're live. open <a href={`https://${result.domain}`} target="_blank" rel="noreferrer">https://{result.domain}</a></>
               : 'this refreshes itself. dns can take up to an hour. keep the record in place or the domain is released after a day.'}
           </p>
         </>
@@ -1614,7 +1614,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
       )}
 
       <p className="h-sub" style={{ fontSize: 13, marginTop: 16 }}>
-        no domain yet? buying one is the better move — a domain of your own is far less
+        no domain yet? buying one is the better move. a domain of your own is far less
         likely to get blocked than a shared free one, and they start under $2 a year:{' '}
         <a href="https://porkbun.com/" target="_blank" rel="noreferrer">porkbun</a>,{' '}
         <a href="https://www.namecheap.com/" target="_blank" rel="noreferrer">namecheap</a>,{' '}
@@ -1623,7 +1623,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
       </p>
       <p className="h-sub" style={{ fontSize: 13, marginTop: 10 }}>
         want free instead? <a href="https://freedns.afraid.org/" target="_blank" rel="noreferrer">freedns</a>{' '}
-        works — pick a shared domain from the{' '}
+        works. pick a shared domain from the{' '}
         <a href="https://publicsuffix.org/list/" target="_blank" rel="noreferrer">public suffix list</a>{' '}
         (mooo.com, crabdance.com, us.to) so you get your own certificate quota instead of
         sharing one with strangers.
@@ -1647,8 +1647,8 @@ const About = () => (
           ads everywhere, paywalls everywhere, your school blocking half the web. tinf0il is a clean room. route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
         </p>
         <div className="tile-row">
-          <div className="tile"><div className="num">{window.GAMES?.length ?? "—"}</div><div className="lab">games</div></div>
-          <div className="tile"><div className="num">{window.APPS?.length ?? "—"}</div><div className="lab">apps</div></div>
+          <div className="tile"><div className="num">{window.GAMES?.length ?? "-"}</div><div className="lab">games</div></div>
+          <div className="tile"><div className="num">{window.APPS?.length ?? "-"}</div><div className="lab">apps</div></div>
           <div className="tile"><div className="num">0</div><div className="lab">trackers</div></div>
         </div>
         <p className="h-sub" style={{ fontSize: 13, marginTop: 20 }}>

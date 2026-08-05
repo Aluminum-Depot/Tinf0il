@@ -12,7 +12,7 @@
 # domains at, so it must always be valid.
 #
 # Only list hostnames that already resolve to THIS box. tinf0il.site is still
-# ALIAS'd to Heroku — adding it here before the apex moves would fail ACME
+# ALIAS'd to Heroku. Adding it here before the apex moves would fail ACME
 # validation on every startup. Add it to this line once you cut the apex over.
 link.tinf0il.site {
 	encode zstd gzip

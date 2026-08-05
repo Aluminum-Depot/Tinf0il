@@ -7,21 +7,21 @@ up automatically. Takes about five minutes.
 
 ## 1. Get a domain
 
-**Recommended — buy one.** A real domain is far less likely to be blocked than a
+**Recommended: buy one.** A real domain is far less likely to be blocked than a
 free one, it's yours alone, and nobody else's behaviour can get it filtered.
 First-year prices are often under $2.
 
-- https://porkbun.com/ (cheapest for most TLDs — check online for coupon codes)
+- https://porkbun.com/ (cheapest for most TLDs, check online for coupon codes)
 - https://www.namecheap.com/
 - https://www.ionos.com/
 - https://www.godaddy.com/
 
-**Free alternative — FreeDNS.** https://freedns.afraid.org/ gives you a subdomain
+**Free alternative: FreeDNS.** https://freedns.afraid.org/ gives you a subdomain
 of a shared domain at no cost. It works, but shared domains get blocked far more
 often, because a filter blocking one person's link blocks everyone's.
 
 If you go free, pick a shared domain that appears on the Public Suffix List
-(https://publicsuffix.org/list/) — `mooo.com`, `crabdance.com`, `us.to`. Those get
+(https://publicsuffix.org/list/): `mooo.com`, `crabdance.com`, `us.to`. Those get
 their own certificate quota. On a domain that isn't listed, you share one weekly
 certificate limit with every stranger using it, and issuing can just stop.
 
@@ -38,7 +38,7 @@ button in the top right.
 
 ## 3. Claim your domain
 
-Still on https://tinf0il.site/settings — the **custom domain** panel is at the top
+Still on https://tinf0il.site/settings. The **custom domain** panel is at the top
 of the page.
 
 Type your domain in and press **claim it**. You'll get back a **DNS target** that
@@ -48,7 +48,7 @@ looks something like:
 amorphous-okra-hlrccn5gi7amb98iu3cmgdpr.herokudns.com
 ```
 
-Copy it. That value is unique to your domain — don't use one from a screenshot or
+Copy it. That value is unique to your domain, so don't use one from a screenshot or
 from someone else.
 
 ---
@@ -57,7 +57,7 @@ from someone else.
 
 Go to your registrar's DNS settings and add **one** record.
 
-**For a subdomain** like `go.yourdomain.com` — the easy option:
+**For a subdomain** like `go.yourdomain.com` (the easy option):
 
 - Type: `CNAME`
 - Name / Host: `go` (or `www`, or whatever you like)
@@ -65,17 +65,17 @@ Go to your registrar's DNS settings and add **one** record.
 
 **For the bare domain** like `yourdomain.com` with no prefix:
 
-- Type: `ALIAS` or `ANAME` (**not** CNAME — the DNS standard forbids CNAME here)
+- Type: `ALIAS` or `ANAME` (**not** CNAME; the DNS standard forbids CNAME here)
 - Name / Host: `@`
 - Value / Target: the DNS target from step 3
 
-Porkbun and Cloudflare both support ALIAS/ANAME. Many registrars don't — if yours
+Porkbun and Cloudflare both support ALIAS/ANAME. Many registrars don't. If yours
 doesn't offer it, use a subdomain instead.
 
 **On FreeDNS:** Subdomains → Add a subdomain → Type `CNAME`, fill in your
 subdomain, and paste the DNS target as the Destination.
 
-> **Paste the hostname only** — no `https://`, no trailing slash, no path.
+> **Paste the hostname only.** No `https://`, no trailing slash, no path.
 >
 > **Do not use "URL forwarding" / "redirect" / "cloaking".** Those serve the site
 > inside a frame, which breaks the proxy, your login, and your saved settings.
@@ -84,7 +84,7 @@ subdomain, and paste the DNS target as the Destination.
 
 ## 5. Wait
 
-That's it. HTTPS is issued automatically — there is nothing to configure and no
+That's it. HTTPS is issued automatically. There is nothing to configure and no
 certificate to install.
 
 Your link usually goes live within a few minutes, though DNS can take up to an
@@ -107,11 +107,11 @@ from another host, remove it there first.
 
 **"You've claimed 3 domains this hour"**
 That's the limit per account per hour. Re-entering a domain you already claimed
-doesn't count toward it — that's just checking status.
+doesn't count toward it; that's just checking status.
 
 **The site loads for everyone else but times out for you**
 Try it in a private/incognito window. If it works there, an extension in your
-normal browser is blocking it — school and "study helper" extensions often filter
+normal browser is blocking it. School and "study helper" extensions often filter
 proxy domains. Turn extensions off one at a time to find it.
 
 **I never pointed it and now it's gone**
