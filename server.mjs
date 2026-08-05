@@ -769,8 +769,23 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 		sni_endpoint: null,
 	});
 	if (!created.ok) {
+		// Heroku custom domains are unique across all of Heroku, so a 422 means
+		// either we already hold it (re-claim, fine) or somebody else does.
 		if (created.status === 422) {
-			return res.status(409).json({ error: "That domain is already registered." });
+			const existing = await herokuApi(
+				"GET",
+				`/apps/${HEROKU_APP}/domains/${encodeURIComponent(host)}`,
+			);
+			if (existing.ok) {
+				return res.json({
+					domain: host,
+					target: existing.body?.cname,
+					status: existing.body?.acm_status || "pending",
+				});
+			}
+			return res.status(409).json({
+				error: "That domain is already in use elsewhere and can't be claimed here.",
+			});
 		}
 		console.warn(`domain add failed for ${host}: ${created.status}`);
 		return res.status(502).json({ error: "Could not register that domain right now." });

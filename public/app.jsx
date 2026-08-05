@@ -1443,10 +1443,9 @@ const DomainPanel = () => {
         body: JSON.stringify({ domain }),
       });
       const data = await res.json();
-      // already claimed by this user earlier — fall through to a status check
-      if (res.status === 409) setResult(await load(domain.trim().toLowerCase()));
-      else if (!res.ok) throw new Error(data.error || 'something went wrong');
-      else setResult(data);
+      // re-claiming a domain we already hold returns its details, not an error
+      if (!res.ok) throw new Error(data.error || 'something went wrong');
+      setResult(data);
     } catch (e2) {
       setErr(e2.message);
     }
