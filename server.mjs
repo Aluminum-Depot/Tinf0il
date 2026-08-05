@@ -707,6 +707,21 @@ function takeToken(bucket, ip, limit) {
 	return true;
 }
 
+/** Peek at a bucket without spending anything. */
+function hasCapacity(bucket, key, limit) {
+	const now = Date.now();
+	const hits = (bucket.get(key) || []).filter((t) => now - t < DOMAIN_RATE_WINDOW_MS);
+	bucket.set(key, hits);
+	return hits.length < limit;
+}
+
+function spendToken(bucket, key) {
+	const hits = bucket.get(key) || [];
+	hits.push(Date.now());
+	bucket.set(key, hits);
+	if (bucket.size > 5000) bucket.clear();
+}
+
 /**
  * Reject hostnames whose parent zone doesn't exist, which kills typos and
  * invented domains before they reach the Heroku API.
@@ -801,6 +816,17 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 		return res.status(401).json({ error: "Sign in to claim a domain." });
 	}
 
+	// Re-submitting a domain we already hold is how people check on it, so answer
+	// with its current status and don't touch the claim budget.
+	const held = await herokuApi("GET", `/apps/${HEROKU_APP}/domains/${encodeURIComponent(host)}`);
+	if (held.ok) {
+		return res.json({
+			domain: host,
+			target: held.body?.cname,
+			status: held.body?.acm_status || "pending",
+		});
+	}
+
 	const claimable = await checkClaimable(host);
 	if (!claimable.ok) return res.status(400).json({ error: claimable.error });
 
@@ -809,8 +835,12 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 			error: "Too many domains are waiting to be set up right now. Try again later.",
 		});
 	}
-	if (!takeToken(domainClaims, uid || req.ip, DOMAIN_CLAIM_LIMIT)) {
-		return res.status(429).json({ error: "You've claimed 3 domains this hour. Try again later." });
+	// Checked here but only spent on a registration that actually succeeds, so
+	// failed attempts never cost anyone a slot.
+	if (!hasCapacity(domainClaims, uid || req.ip, DOMAIN_CLAIM_LIMIT)) {
+		return res.status(429).json({
+			error: `You've claimed ${DOMAIN_CLAIM_LIMIT} domains this hour. Try again later.`,
+		});
 	}
 
 	const created = await herokuApi("POST", `/apps/${HEROKU_APP}/domains`, {
@@ -839,6 +869,7 @@ app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
 		console.warn(`domain add failed for ${host}: ${created.status}`);
 		return res.status(502).json({ error: "Could not register that domain right now." });
 	}
+	spendToken(domainClaims, uid || req.ip);
 	pendingCache.count += 1;
 
 	res.json({
