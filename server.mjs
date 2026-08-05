@@ -703,32 +703,20 @@ function takeToken(bucket, ip, limit) {
 }
 
 /**
- * Reject anything that isn't a real, unclaimed hostname:
- *  - the parent zone must actually exist (kills typos and invented domains)
- *  - the hostname itself must not already resolve elsewhere (kills attempts to
- *    claim google.com and friends)
- * A host already pointed at Heroku is fine — that's someone re-claiming after
- * their registration was reaped.
+ * Reject hostnames whose parent zone doesn't exist, which kills typos and
+ * invented domains before they reach the Heroku API.
+ *
+ * Deliberately does NOT reject hostnames that currently resolve elsewhere:
+ * anyone migrating a live domain needs it serving its old target right up
+ * until they switch the record over. Claiming a domain you don't control gains
+ * nothing anyway — no certificate issues until DNS points here, and the reaper
+ * releases it within the grace period.
  */
 async function checkClaimable(host) {
 	const parent = host.split(".").slice(-2).join(".");
 	const ns = await dns.resolveNs(parent).catch(() => []);
 	if (!ns.length) {
 		return { ok: false, error: `${parent} isn't a real domain. Check the spelling.` };
-	}
-
-	const cname = await dns.resolveCname(host).catch(() => []);
-	if (cname.some((t) => /\.heroku(dns\.com|app\.com)\.?$/i.test(t))) return { ok: true };
-
-	const [v4, v6] = await Promise.all([
-		dns.resolve4(host).catch(() => []),
-		dns.resolve6(host).catch(() => []),
-	]);
-	if (v4.length || v6.length) {
-		return {
-			ok: false,
-			error: "That domain already points somewhere else. Delete its existing DNS record first.",
-		};
 	}
 	return { ok: true };
 }
