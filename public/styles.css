@@ -718,6 +718,19 @@ main {
 .stack-list .v { color: var(--text); }
 .stack-list .stat { color: var(--accent); font-size: 10px; }
 
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.link-btn:hover { color: var(--text); }
+
 /* ── catalog ── */
 .toolbar {
   display: flex;

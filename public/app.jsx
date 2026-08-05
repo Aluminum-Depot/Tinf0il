@@ -1428,6 +1428,7 @@ const DomainPanel = ({ user, onShowAuth }) => {
   const [err, setErr] = useState('');
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [mine, setMine] = useState([]);
 
   const load = async host => {
     const res = await fetch(`/api/domains/${encodeURIComponent(host)}`);
@@ -1435,6 +1436,42 @@ const DomainPanel = ({ user, onShowAuth }) => {
     if (!res.ok) throw new Error(data.error || 'could not check that domain');
     return data;
   };
+
+  const userDoc = () => window.fbDb?.collection('proxy-users').doc(user.uid);
+
+  /**
+   * Heroku has no per-domain owner field, so the claim list lives on the user's
+   * own document. Statuses always come from the server, never from what's stored
+   * here — a domain reaped for never being pointed shows up as released.
+   */
+  const loadMine = async () => {
+    if (!user || !window.fbDb) return;
+    try {
+      const snap = await userDoc().get();
+      const list = (snap.exists && snap.data().domains) || [];
+      const rows = await Promise.all(
+        list.map(h => load(h).catch(() => ({ domain: h, status: 'released', pointed: false }))),
+      );
+      setMine(rows);
+    } catch { /* sync unavailable — the claim form still works */ }
+  };
+
+  const remember = async host => {
+    if (!user || !window.fbDb) return;
+    await userDoc()
+      .set({ domains: firebase.firestore.FieldValue.arrayUnion(host) }, { merge: true })
+      .catch(() => {});
+  };
+
+  const forget = async host => {
+    if (!user || !window.fbDb) return;
+    await userDoc()
+      .set({ domains: firebase.firestore.FieldValue.arrayRemove(host) }, { merge: true })
+      .catch(() => {});
+    setMine(m => m.filter(d => d.domain !== host));
+  };
+
+  useEffect(() => { loadMine(); }, [user?.uid]);
 
   const submit = async e => {
     e.preventDefault();
@@ -1454,6 +1491,8 @@ const DomainPanel = ({ user, onShowAuth }) => {
       // re-claiming a domain we already hold returns its details, not an error
       if (!res.ok) throw new Error(data.error || 'something went wrong');
       setResult(data);
+      await remember(data.domain);
+      loadMine();
     } catch (e2) {
       setErr(e2.message);
     }
@@ -1543,6 +1582,34 @@ const DomainPanel = ({ user, onShowAuth }) => {
               ? <>you're live — open <a href={`https://${result.domain}`} target="_blank" rel="noreferrer">https://{result.domain}</a></>
               : 'this refreshes itself. dns can take up to an hour. keep the record in place or the domain is released after a day.'}
           </p>
+        </>
+      )}
+
+      {user && mine.length > 0 && (
+        <>
+          <span className="field-label" style={{ display: 'block', marginTop: 22 }}>your domains</span>
+          <ul className="stack-list">
+            {mine.map(d => {
+              const s = d.status === 'released'
+                ? { text: 'released', tone: 'gone' }
+                : (ACM_LABELS[d.status] || ACM_LABELS.pending);
+              return (
+                <li key={d.domain}>
+                  <span className="k">{s.tone}</span>
+                  <span className="v">
+                    {d.status === 'cert issued'
+                      ? <a href={`https://${d.domain}`} target="_blank" rel="noreferrer">{d.domain}</a>
+                      : d.domain}
+                  </span>
+                  <span className="stat">
+                    {d.status === 'released'
+                      ? <button className="link-btn" type="button" onClick={() => forget(d.domain)}>remove</button>
+                      : (d.pointed ? s.text : 'waiting for dns')}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </>
       )}
 
