@@ -1,0 +1,38 @@
+{
+	# Used for ACME account registration / expiry notices.
+	email admin@tinf0il.site
+
+	on_demand_tls {
+		ask http://127.0.0.1:8787/api/tls-allow
+	}
+}
+
+# --- Canonical hostnames -----------------------------------------------------
+# Pre-issued cert at startup. This is the CNAME target users point their own
+# domains at, so it must always be valid.
+#
+# Only list hostnames that already resolve to THIS box. tinf0il.site is still
+# ALIAS'd to Heroku — adding it here before the apex moves would fail ACME
+# validation on every startup. Add it to this line once you cut the apex over.
+link.tinf0il.site {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8787
+}
+
+# --- User-brought domains ----------------------------------------------------
+# Catch-all for any other hostname arriving on :443. Caddy asks /api/tls-allow
+# before issuing, so only hostnames already pointed here get a certificate.
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8787
+}
+
+# --- Plain HTTP --------------------------------------------------------------
+# Redirect everything to HTTPS. Caddy serves ACME HTTP-01 challenges from this
+# listener before the redirect applies, so port 80 must stay open.
+http:// {
+	redir https://{host}{uri} permanent
+}

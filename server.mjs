@@ -1,5 +1,6 @@
 import express from "express";
 import { spawn } from "node:child_process";
+import dns from "node:dns/promises";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
@@ -20,6 +21,31 @@ const TV_APP_URL = new URL(TV_APP_ORIGIN);
 const TV_APP_PORT = Number(process.env.TV_APP_PORT || process.env.TV_NEXT_PORT || TV_APP_URL.port || 3000);
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 const TV_APP_DIR = path.join(repoRoot, "movieverse");
+
+/** Public IPs of this edge. Caddy only issues a cert for a hostname that resolves here. */
+const EDGE_IPS = new Set(
+	(process.env.EDGE_IPS || "")
+		.split(",")
+		.map((s) => s.trim())
+		.filter(Boolean),
+);
+const TLS_ALLOW_TTL_OK = 6 * 60 * 60 * 1000;
+const TLS_ALLOW_TTL_DENY = 60 * 1000;
+
+const HEROKU_API_KEY = process.env.HEROKU_API_KEY || "";
+const HEROKU_APP = process.env.HEROKU_APP_NAME || "";
+/** Hostnames users may never claim. */
+const RESERVED_SUFFIX = "tinf0il.site";
+/** An unconfirmed domain holds a slot in the app's domain quota; reap it after this. */
+const DOMAIN_GRACE_MS = 24 * 60 * 60 * 1000;
+const DOMAIN_REAP_INTERVAL_MS = 6 * 60 * 60 * 1000;
+/** Successful claims per IP per hour. */
+const DOMAIN_CLAIM_LIMIT = 3;
+/** Attempts (including rejected ones) per IP per hour — stops DNS-lookup hammering. */
+const DOMAIN_ATTEMPT_LIMIT = 20;
+const DOMAIN_RATE_WINDOW_MS = 60 * 60 * 1000;
+/** Ceiling on unconfirmed domains, so nobody can fill the app's domain quota. */
+const MAX_PENDING_DOMAINS = 50;
 const TV_PROXY_HEADER_MAP = {
 	"x-cookie": "cookie",
 	"x-referer": "referer",
@@ -260,6 +286,9 @@ function applyTvProxyCors(res) {
 }
 
 const app = express();
+
+/** Behind Caddy: honour X-Forwarded-* so req.ip and req.protocol stay accurate. */
+app.set("trust proxy", true);
 
 let tvAppChild = null;
 
@@ -592,6 +621,238 @@ function buildMetaTags(page) {
 		`<meta name="twitter:description" content="${m.ogDescription}">`,
 		`<meta name="twitter:image" content="${image}">`,
 	].join("\n  ");
+}
+
+const tlsAllowCache = new Map();
+
+async function pointsAtEdge(host) {
+	const [v4, v6] = await Promise.all([
+		dns.resolve4(host).catch(() => []),
+		dns.resolve6(host).catch(() => []),
+	]);
+	return [...v4, ...v6].some((addr) => EDGE_IPS.has(addr));
+}
+
+/**
+ * Gate for Caddy's on-demand TLS. Returns 200 only for hostnames that already
+ * resolve to this edge, so arbitrary SNI can't burn our ACME quota. Fails closed
+ * when EDGE_IPS is unset.
+ */
+app.get("/api/tls-allow", async (req, res) => {
+	const host = String(req.query.domain || "")
+		.toLowerCase()
+		.replace(/\.$/, "");
+	if (!/^(?=.{1,253}$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(host)) {
+		return res.sendStatus(400);
+	}
+	if (!EDGE_IPS.size) return res.sendStatus(503);
+
+	const hit = tlsAllowCache.get(host);
+	if (hit && hit.expires > Date.now()) return res.sendStatus(hit.ok ? 200 : 403);
+
+	const ok = await pointsAtEdge(host).catch(() => false);
+	if (tlsAllowCache.size > 5000) tlsAllowCache.clear();
+	tlsAllowCache.set(host, {
+		ok,
+		expires: Date.now() + (ok ? TLS_ALLOW_TTL_OK : TLS_ALLOW_TTL_DENY),
+	});
+	res.sendStatus(ok ? 200 : 403);
+});
+
+const HOSTNAME_RE = /^(?=.{1,253}$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+
+function normalizeHost(input) {
+	const host = String(input || "")
+		.trim()
+		.toLowerCase()
+		.replace(/^https?:\/\//, "")
+		.replace(/[/?#].*$/, "")
+		.replace(/\.$/, "");
+	return HOSTNAME_RE.test(host) ? host : null;
+}
+
+async function herokuApi(method, pathname, body) {
+	const res = await fetch(`https://api.heroku.com${pathname}`, {
+		method,
+		headers: {
+			Authorization: `Bearer ${HEROKU_API_KEY}`,
+			Accept: "application/vnd.heroku+json; version=3",
+			"Content-Type": "application/json",
+		},
+		body: body ? JSON.stringify(body) : undefined,
+	});
+	const text = await res.text();
+	let parsed = null;
+	try {
+		parsed = text ? JSON.parse(text) : null;
+	} catch {}
+	return { ok: res.ok, status: res.status, body: parsed };
+}
+
+const domainAttempts = new Map();
+const domainClaims = new Map();
+
+function takeToken(bucket, ip, limit) {
+	const now = Date.now();
+	const hits = (bucket.get(ip) || []).filter((t) => now - t < DOMAIN_RATE_WINDOW_MS);
+	if (hits.length >= limit) return false;
+	hits.push(now);
+	bucket.set(ip, hits);
+	if (bucket.size > 5000) bucket.clear();
+	return true;
+}
+
+/**
+ * Reject anything that isn't a real, unclaimed hostname:
+ *  - the parent zone must actually exist (kills typos and invented domains)
+ *  - the hostname itself must not already resolve elsewhere (kills attempts to
+ *    claim google.com and friends)
+ * A host already pointed at Heroku is fine — that's someone re-claiming after
+ * their registration was reaped.
+ */
+async function checkClaimable(host) {
+	const parent = host.split(".").slice(-2).join(".");
+	const ns = await dns.resolveNs(parent).catch(() => []);
+	if (!ns.length) {
+		return { ok: false, error: `${parent} isn't a real domain. Check the spelling.` };
+	}
+
+	const cname = await dns.resolveCname(host).catch(() => []);
+	if (cname.some((t) => /\.heroku(dns\.com|app\.com)\.?$/i.test(t))) return { ok: true };
+
+	const [v4, v6] = await Promise.all([
+		dns.resolve4(host).catch(() => []),
+		dns.resolve6(host).catch(() => []),
+	]);
+	if (v4.length || v6.length) {
+		return {
+			ok: false,
+			error: "That domain already points somewhere else. Delete its existing DNS record first.",
+		};
+	}
+	return { ok: true };
+}
+
+let pendingCache = { count: 0, at: 0 };
+
+async function pendingDomainCount() {
+	if (Date.now() - pendingCache.at < 60_000) return pendingCache.count;
+	const list = await herokuApi("GET", `/apps/${HEROKU_APP}/domains`);
+	if (!list.ok || !Array.isArray(list.body)) return 0;
+	const count = list.body.filter((d) => d.kind === "custom" && d.acm_status !== "cert issued").length;
+	pendingCache = { count, at: Date.now() };
+	return count;
+}
+
+function domainsConfigured() {
+	return Boolean(HEROKU_API_KEY && HEROKU_APP);
+}
+
+/** Register a user-supplied domain and hand back the CNAME target Heroku assigns it. */
+app.post("/api/domains", express.json({ limit: "1kb" }), async (req, res) => {
+	if (!domainsConfigured()) {
+		return res.status(503).json({ error: "Domain registration is not configured." });
+	}
+	const host = normalizeHost(req.body?.domain);
+	if (!host) {
+		return res.status(400).json({ error: "Enter a valid domain, for example meals.mooo.com" });
+	}
+	if (host === RESERVED_SUFFIX || host.endsWith(`.${RESERVED_SUFFIX}`)) {
+		return res.status(400).json({ error: "That domain is reserved." });
+	}
+	if (!takeToken(domainAttempts, req.ip, DOMAIN_ATTEMPT_LIMIT)) {
+		return res.status(429).json({ error: "Too many attempts. Try again in an hour." });
+	}
+
+	const claimable = await checkClaimable(host);
+	if (!claimable.ok) return res.status(400).json({ error: claimable.error });
+
+	if ((await pendingDomainCount()) >= MAX_PENDING_DOMAINS) {
+		return res.status(503).json({
+			error: "Too many domains are waiting to be set up right now. Try again later.",
+		});
+	}
+	if (!takeToken(domainClaims, req.ip, DOMAIN_CLAIM_LIMIT)) {
+		return res.status(429).json({ error: "Too many domains claimed. Try again in an hour." });
+	}
+
+	const created = await herokuApi("POST", `/apps/${HEROKU_APP}/domains`, {
+		hostname: host,
+		sni_endpoint: null,
+	});
+	if (!created.ok) {
+		if (created.status === 422) {
+			return res.status(409).json({ error: "That domain is already registered." });
+		}
+		console.warn(`domain add failed for ${host}: ${created.status}`);
+		return res.status(502).json({ error: "Could not register that domain right now." });
+	}
+	pendingCache.count += 1;
+
+	res.json({
+		domain: host,
+		target: created.body?.cname,
+		status: created.body?.acm_status || "pending",
+	});
+});
+
+/** Poll for cert progress so users can self-diagnose instead of asking for help. */
+app.get("/api/domains/:host", async (req, res) => {
+	if (!domainsConfigured()) {
+		return res.status(503).json({ error: "Domain registration is not configured." });
+	}
+	const host = normalizeHost(req.params.host);
+	if (!host) return res.status(400).json({ error: "Invalid domain." });
+
+	const found = await herokuApi("GET", `/apps/${HEROKU_APP}/domains/${encodeURIComponent(host)}`);
+	if (!found.ok) return res.status(404).json({ error: "That domain is not registered." });
+
+	const target = found.body?.cname;
+	const cname = await dns.resolveCname(host).catch(() => []);
+	const pointed = cname.some((t) => t.toLowerCase().replace(/\.$/, "") === String(target).toLowerCase());
+
+	res.json({
+		domain: host,
+		target,
+		pointed,
+		status: found.body?.acm_status || "pending",
+		detail: found.body?.acm_status_reason || null,
+	});
+});
+
+/**
+ * Domains that are registered but never pointed here sit in the app's domain
+ * quota forever. Drop the ones still unconfirmed past the grace period.
+ */
+async function reapStaleDomains() {
+	if (!domainsConfigured()) return;
+	const list = await herokuApi("GET", `/apps/${HEROKU_APP}/domains`);
+	if (!list.ok || !Array.isArray(list.body)) return;
+
+	for (const entry of list.body) {
+		if (entry.kind !== "custom") continue;
+		if (entry.acm_status === "cert issued") continue;
+		if (entry.hostname === RESERVED_SUFFIX || entry.hostname?.endsWith(`.${RESERVED_SUFFIX}`)) continue;
+		if (Date.now() - new Date(entry.created_at).getTime() < DOMAIN_GRACE_MS) continue;
+
+		const cname = await dns.resolveCname(entry.hostname).catch(() => []);
+		const pointed = cname.some(
+			(t) => t.toLowerCase().replace(/\.$/, "") === String(entry.cname).toLowerCase(),
+		);
+		if (pointed) continue;
+
+		const removed = await herokuApi(
+			"DELETE",
+			`/apps/${HEROKU_APP}/domains/${encodeURIComponent(entry.hostname)}`,
+		);
+		console.log(`reaped unconfirmed domain ${entry.hostname} (${removed.ok ? "ok" : "failed"})`);
+	}
+}
+
+if (domainsConfigured()) {
+	setInterval(() => {
+		reapStaleDomains().catch((e) => console.warn(`domain reap failed: ${e?.message}`));
+	}, DOMAIN_REAP_INTERVAL_MS).unref();
 }
 
 app.use((req, res, next) => {

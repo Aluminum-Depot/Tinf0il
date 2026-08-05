@@ -1109,6 +1109,8 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
       <section className="shell settings-wrap">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <DomainPanel />
+
           <div className="panel">
             <span className="panel-tag">// tab cloak</span>
             <h3>cloak</h3>
@@ -1315,6 +1317,133 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
       <SideRails />
     </main>
+  );
+};
+
+const ACM_LABELS = {
+  'cert issued': { text: 'live', tone: 'ok' },
+  'in-progress': { text: 'issuing certificate...', tone: 'wait' },
+  pending: { text: 'waiting for dns', tone: 'wait' },
+  failing: { text: 'failing — check your cname', tone: 'bad' },
+  failed: { text: 'failed — check your cname', tone: 'bad' },
+};
+
+const DomainPanel = () => {
+  const [domain, setDomain] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [result, setResult] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const load = async host => {
+    const res = await fetch(`/api/domains/${encodeURIComponent(host)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'could not check that domain');
+    return data;
+  };
+
+  const submit = async e => {
+    e.preventDefault();
+    if (busy) return;
+    setErr(''); setBusy(true);
+    try {
+      const res = await fetch('/api/domains', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      });
+      const data = await res.json();
+      // already claimed by this user earlier — fall through to a status check
+      if (res.status === 409) setResult(await load(domain.trim().toLowerCase()));
+      else if (!res.ok) throw new Error(data.error || 'something went wrong');
+      else setResult(data);
+    } catch (e2) {
+      setErr(e2.message);
+    }
+    setBusy(false);
+  };
+
+  // poll until the cert lands, then stop
+  useEffect(() => {
+    if (!result || result.status === 'cert issued') return;
+    const id = setInterval(() => {
+      load(result.domain).then(setResult).catch(() => {});
+    }, 15000);
+    return () => clearInterval(id);
+  }, [result?.domain, result?.status]);
+
+  const copy = () => {
+    navigator.clipboard.writeText(result.target).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    }).catch(() => {});
+  };
+
+  const state = result && (ACM_LABELS[result.status] || ACM_LABELS.pending);
+
+  return (
+    <div className="panel">
+      <span className="panel-tag">// custom domain</span>
+      <h3>bring your own domain</h3>
+      <p className="h-sub">point a domain at tinf0il and get your own private link. https is automatic.</p>
+
+      <form className="field" onSubmit={submit} style={{ marginTop: 16 }}>
+        <span className="field-label">your domain</span>
+        <input
+          placeholder="meals.mooo.com"
+          value={domain}
+          onChange={e => { setDomain(e.target.value); setErr(''); }}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck="false"
+          required
+        />
+        <button className="btn accent" type="submit" disabled={busy} style={{ marginTop: 10 }}>
+          {busy ? '...' : result ? 'check again' : 'claim it'}
+        </button>
+      </form>
+      {err && <p className="auth-err">{err}</p>}
+
+      {result && (
+        <>
+          <div className="field" style={{ marginTop: 18 }}>
+            <span className="field-label">add a cname on {result.domain} pointing to</span>
+            <input value={result.target || ''} readOnly onFocus={e => e.target.select()} />
+            <button className="btn" type="button" onClick={copy} style={{ marginTop: 10 }}>
+              {copied ? 'copied ✓' : 'copy'}
+            </button>
+          </div>
+          <ul className="stack-list">
+            <li>
+              <span className="k">cname</span>
+              <span className="v">{result.pointed ? 'detected' : 'not detected yet'}</span>
+              <span className="stat">{result.pointed ? 'ok' : 'waiting'}</span>
+            </li>
+            <li>
+              <span className="k">https</span>
+              <span className="v">{state.text}</span>
+              <span className="stat">{state.tone}</span>
+            </li>
+          </ul>
+          {result.detail && (
+            <p className="h-sub" style={{ fontSize: 13, marginTop: 12 }}>{result.detail}</p>
+          )}
+          <p className="h-sub" style={{ fontSize: 13, marginTop: 16 }}>
+            {result.status === 'cert issued'
+              ? <>you're live — open <a href={`https://${result.domain}`} target="_blank" rel="noreferrer">https://{result.domain}</a></>
+              : 'this refreshes itself. dns can take up to an hour. keep the record in place or the domain is released after a day.'}
+          </p>
+        </>
+      )}
+
+      <p className="h-sub" style={{ fontSize: 13, marginTop: 16 }}>
+        no domain? grab a free subdomain at{' '}
+        <a href="https://freedns.afraid.org/" target="_blank" rel="noreferrer">freedns</a>. pick a shared
+        domain from the{' '}
+        <a href="https://publicsuffix.org/list/" target="_blank" rel="noreferrer">public suffix list</a>{' '}
+        (mooo.com, crabdance.com, us.to) so you get your own certificate quota.
+      </p>
+    </div>
   );
 };
 

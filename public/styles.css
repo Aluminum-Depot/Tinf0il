@@ -680,6 +680,28 @@ main {
   gap: 12px;
 }
 
+/* ── inline links in prose ──
+   there was no base anchor rule, so these fell back to the browser's default
+   blue. derived from --accent so they track whichever theme is active. */
+.panel a:not(.btn),
+.h-sub a,
+.lede a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  /* dropped by older engines, which just leaves a solid accent underline */
+  text-decoration-color: color-mix(in srgb, currentColor 38%, transparent);
+  /* only the underline animates on hover. transitioning `color` here would pin
+     it to its first resolved value, so theme switches wouldn't take effect. */
+  transition: text-decoration-color 160ms;
+}
+.panel a:not(.btn):hover,
+.h-sub a:hover,
+.lede a:hover {
+  text-decoration-color: currentColor;
+}
+
 .stack-list { list-style: none; display: flex; flex-direction: column; }
 .stack-list li {
   display: grid;
