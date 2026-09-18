@@ -17,10 +17,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_EMBED_DOMAINS = [
-  "embedstreams.top", // current (verified live)
-  "embedsports.top",  // previous — kept as fallback in case it returns
-  "embedme.top",      // older mirror
+  "embed.st",         // current (verified live 2026-09-17)
+  "embedstreams.top", // previous — DNS dead, kept in case it returns
+  "embedsports.top",  // older — DNS dead
 ]
+
+// The streamed API reports the live embed host in each stream's embedUrl. The
+// /api/sports/embed-domain route asks it first, so future rotations are picked
+// up automatically without touching the list above.
+export const STREAMED_API_BASES = ["https://streamed.pk", "https://streamed.su"]
 
 const ENV_EMBED_DOMAINS = (process.env.NEXT_PUBLIC_SPORTS_EMBED_DOMAINS || "")
   .split(",")

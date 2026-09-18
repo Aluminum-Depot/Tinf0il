@@ -32,7 +32,7 @@ const SportsPlayer = ({ id }) => {
     } catch {}
   }
 
-  // The main "Stream" embeds (embedstreams.top) use MSE/hls.js with origin-locked
+  // The main "Stream" embeds (embed.st) use MSE/hls.js with origin-locked
   // HLS, which iOS WebKit rejects — so on iOS we steer users to the Alt Stream
   // (ntvs.cx's own player) and show a notice if they pick a main stream instead.
   useEffect(() => {
