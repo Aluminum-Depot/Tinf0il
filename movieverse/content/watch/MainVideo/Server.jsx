@@ -80,7 +80,7 @@ const Server = () => {
 
 
     setWatchInfo(prev => ({ ...prev, ...defaultWatchInfo, watchdata }));
-  }, [episode, servers]);
+  }, [episode, episodes, servers, setWatchInfo]);
 
   return (
     <div className="w-full flex flex-col gap-1">

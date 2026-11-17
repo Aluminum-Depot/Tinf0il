@@ -2,37 +2,44 @@
 
 import { getEpisodes } from '@/lib/TVfunctions';
 import { saveWatchProgress } from '@/utils/ProgressHandler';
-import { useSearchParams } from 'next/navigation';
-import { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'react-toastify';
 
 export const WatchAreaContext = createContext(null);
 
 export function WatchAreaContextProvider({ children, MovieInfo, MovieId }) {
   const searchparam = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
 
-  const [episode, setEpisode] = useState(() => parseInt(searchparam.get('ep')) || 1);
-  const [season, setSeason] = useState(() => parseInt(searchparam.get('se')) || 1);
+  const episode = Math.max(1, parseInt(searchparam.get('ep'), 10) || 1);
+  const seasonParam = parseInt(searchparam.get('se'), 10);
+  const season = Number.isInteger(seasonParam) && seasonParam >= 0 ? seasonParam : 1;
   const [episodes, setEpisodes] = useState([]);
   const [episodeLoading, setEpisodeLoading] = useState(true);
   const [watchInfo, setWatchInfo] = useState({ loading: true });
 
 
-  // ---------------- SYNC WITH SEARCH PARAMS ----------------
-  useEffect(() => {
-    const ep = parseInt(searchparam.get('ep')) || 1;
-    const se = parseInt(searchparam.get('se')) || 1;
+  const selectEpisode = useCallback((nextEpisode, nextSeason = season) => {
+    if (!Number.isInteger(nextEpisode) || nextEpisode < 1 ||
+        !Number.isInteger(nextSeason) || nextSeason < 0) return;
 
-    setEpisode(ep);
-    setSeason(se);
-  }, [searchparam]);
+    const updatedParams = new URLSearchParams(searchparam.toString());
+    updatedParams.set('se', String(nextSeason));
+    updatedParams.set('ep', String(nextEpisode));
+    // usePathname excludes Next's /tv basePath; the router adds it once.
+    router.push(`${pathname}?${updatedParams.toString()}`, { scroll: false });
+  }, [pathname, router, searchparam, season]);
 
 
   // ---------------- FETCH EPISODES ----------------
   useEffect(() => {
     if (!MovieInfo) return;
+    let cancelled = false;
 
     setEpisodeLoading(true);
+    setEpisodes([]);
 
     if (MovieInfo.type !== 'tv') {
       const movieEpisode = [{
@@ -52,6 +59,7 @@ export function WatchAreaContextProvider({ children, MovieInfo, MovieId }) {
     const fetchEpisodes = async () => {
       try {
         const data = await getEpisodes(MovieId, season);
+        if (cancelled) return;
         if (!data?.episodes?.length) {
           toast('No episodes found');
           setEpisodes([]);
@@ -59,30 +67,33 @@ export function WatchAreaContextProvider({ children, MovieInfo, MovieId }) {
           setEpisodes(data.episodes);
         }
       } catch (err) {
+        if (cancelled) return;
         console.error(err);
         toast('Failed to fetch episodes');
       } finally {
-        setEpisodeLoading(false);
+        if (!cancelled) setEpisodeLoading(false);
       }
     };
 
     fetchEpisodes();
+    return () => { cancelled = true; };
   }, [MovieInfo, MovieId, season]);
 
 
   // ---------------- SAVE PROGRESS ----------------
   useEffect(() => {
-    if (episodes.length && MovieInfo) {
+    if (!episodeLoading && episodes.some(item =>
+      item.episode_number === episode && item.season_number === season
+    ) && MovieInfo) {
       saveWatchProgress(MovieInfo, episodes, episode, season);
     }
-  }, [episode, season, episodes, MovieInfo]);
+  }, [episode, season, episodes, MovieInfo, episodeLoading]);
 
   // ---------------- CONTEXT VALUE ----------------
   const contextValue = useMemo(() => ({
     episode,
-    setEpisode,
+    selectEpisode,
     season,
-    setSeason,
     episodes,
     watchInfo,
     setWatchInfo,
@@ -92,6 +103,7 @@ export function WatchAreaContextProvider({ children, MovieInfo, MovieId }) {
   }), [
     episode,
     season,
+    selectEpisode,
     episodes,
     watchInfo,
     episodeLoading,

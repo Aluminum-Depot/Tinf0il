@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const Option = ({ isMovieExists }) => {
   const { setWatchSetting, watchSetting } = useWatchSettingContext()
-  const { setEpisode, MovieInfo } = useWatchContext()
+  const { selectEpisode, episode, season, episodes, episodeLoading, MovieInfo } = useWatchContext()
   const { isUserLoggedIn } = useUserInfoContext()
   const [copied, setCopied] = useState(false)
 
@@ -54,23 +54,27 @@ const Option = ({ isMovieExists }) => {
       </div>
 
       <div className="flex gap-3">
-        <div
-          className="flex items-center gap-2 cursor-pointer"
+        <button
+          type="button"
+          disabled={MovieInfo?.type !== "tv" || episodeLoading || episode <= 1}
+          className="flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
           onClick={() => {
             if (MovieInfo?.type === "tv") {
-              setEpisode(prev => prev > 1 ? prev - 1 : prev)
+              selectEpisode(episode - 1, season)
             }
           }}
-        ><span><FaBackward /></span> Prev</div>
+        ><span><FaBackward /></span> Prev</button>
 
-        <div
-          className="flex items-center gap-2 cursor-pointer"
+        <button
+          type="button"
+          disabled={MovieInfo?.type !== "tv" || episodeLoading || !episodes.some(item => item.episode_number === episode + 1)}
+          className="flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
           onClick={() => {
             if (MovieInfo?.type === "tv") {
-              setEpisode(prev => prev + 1)
+              selectEpisode(episode + 1, season)
             }
           }}
-        >Next <span><FaForward /></span></div>
+        >Next <span><FaForward /></span></button>
 
 
         {isUserLoggedIn && <AddToList movieInfo={MovieInfo} isMovieExists={isMovieExists} />}

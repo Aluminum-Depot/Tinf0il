@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWatchContext } from "@/context/Watch";
 import clsx from "clsx";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
 
 const EpisodeCard = ({
   info,
@@ -12,9 +11,7 @@ const EpisodeCard = ({
   posterImg,
   currentSn,
 }) => {
-  const { season } = useWatchContext();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { season, selectEpisode } = useWatchContext();
 
   const [errorLoadingImage, setErrorLoadingImage] = useState(false);
 
@@ -25,39 +22,13 @@ const EpisodeCard = ({
   const episodeNumber = info?.episode_number;
   const seasonNumber = info?.season_number;
 
-  // ✅ Update both season & episode in URL
-  const updateParamsInUrl = useCallback(
-    (seasonNumber, episodeNumber) => {
-      const updatedParams = new URLSearchParams(searchParams.toString());
-
-      if (seasonNumber) {
-        updatedParams.set("se", seasonNumber);
-      } else {
-        updatedParams.delete("se");
-      }
-
-      if (episodeNumber) {
-        updatedParams.set("ep", episodeNumber);
-      } else {
-        updatedParams.delete("ep");
-      }
-
-      router.push(
-        `${window.location.pathname}?${updatedParams.toString()}`,
-        { scroll: false }
-      );
-    },
-    [router, searchParams]
-  );
-
   const handleClick = useCallback(() => {
-    if (!episodeNumber || !seasonNumber) return;
-    updateParamsInUrl(seasonNumber, episodeNumber);
-  }, [episodeNumber, seasonNumber, updateParamsInUrl]);
+    selectEpisode(episodeNumber, seasonNumber);
+  }, [episodeNumber, seasonNumber, selectEpisode]);
 
   const isCurrentEpisode = useMemo(
     () => (currentEp === episodeNumber) && currentSn === seasonNumber,
-    [currentEp, episodeNumber]
+    [currentEp, episodeNumber, currentSn, seasonNumber]
   );
 
   const isWatched = useMemo(
@@ -80,9 +51,12 @@ const EpisodeCard = ({
   }
 
   return (
-    <div
+    <button
+      type="button"
+      aria-label={`Play season ${seasonNumber}, episode ${episodeNumber}: ${info?.name || "Untitled"}`}
+      aria-current={isCurrentEpisode ? "true" : undefined}
       className={clsx(
-        "flex gap-3 py-2 border-2 border-[#21232e] rounded-md cursor-pointer group",
+        "flex w-full text-left gap-3 py-2 border-2 border-[#21232e] rounded-md cursor-pointer group",
         {
           "bg-[#333345]": isCurrentEpisode,
           "bg-[#1f1f28]": !isCurrentEpisode && !isWatched,
@@ -116,7 +90,7 @@ const EpisodeCard = ({
           Season {seasonNumber} · Episode {episodeNumber}
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 

@@ -19,13 +19,13 @@ const EpisodeSelector = () => {
     episodes,
     MovieId,
     MovieInfo,
-    setSeason,
+    selectEpisode,
     season,
     episodeLoading,
   } = useWatchContext();
 
   const storageKey =
-    MovieId && season ? `playing.${MovieId}.season.${season}` : null;
+    MovieId && season >= 0 ? `playing.${MovieId}.season.${season}` : null;
 
   // ✅ Load watched episodes
   useEffect(() => {
@@ -62,10 +62,10 @@ const EpisodeSelector = () => {
   // ✅ Season dropdown data
   const seasonData = useMemo(() => {
     if (!MovieInfo?.seasons) return [];
-    return MovieInfo.seasons.map((_, i) => `Season ${i + 1}`);
+    return MovieInfo.seasons.map(item => item.name || `Season ${item.season_number}`);
   }, [MovieInfo]);
 
-  const selectedSeasonIndex = season - 1;
+  const selectedSeasonIndex = MovieInfo?.seasons?.findIndex(item => item.season_number === season) ?? -1;
 
   // ✅ Filter episodes safely
   const filteredEpisodes = useMemo(() => {
@@ -113,9 +113,10 @@ const EpisodeSelector = () => {
               data={seasonData}
               selectedIndex={selectedSeasonIndex}
               setSelected={(val) => {
-                const newSeason = val.id + 1;
+                const newSeason = MovieInfo.seasons[val.id]?.season_number;
                 if (newSeason !== season) {
-                  setSeason(newSeason);
+                  setSearchQuery("");
+                  selectEpisode(1, newSeason);
                 }
               }}
             />

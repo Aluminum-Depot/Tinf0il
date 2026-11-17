@@ -1,5 +1,5 @@
 export const getEpisodes = async (TMDBID, season) => {
-  const url = `https://api.themoviedb.org/3/tv/${TMDBID}/season/${season || 1}?language=en-US?&api_key=${process.env.TMDB_API_KEY}`;
+  const url = `https://api.themoviedb.org/3/tv/${TMDBID}/season/${season ?? 1}?language=en-US&api_key=${process.env.TMDB_API_KEY}`;
 
   try {
     const res = await fetch(url, {

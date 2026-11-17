@@ -24,7 +24,7 @@ export const getWatchProgress = (isSlice = true, page = 1, pageSize = 4) => {
     title: item.title,
     episode: item.episode_number,
     totalepisode: item.totalepisode,
-    season: item.season_number || 1,
+    season: item.season_number ?? 1,
     description: item.description || "",
     runtime: item.runtime || '',
     media_type: item.media_type || "movie",
@@ -57,7 +57,7 @@ export const saveWatchProgress = (
     [id]: {
       title: ((episodeInfo?.title || "") || (data?.original_name) || (data?.title)),
       episode_number: episodeInfo?.episode_number || 1,
-      season_number: episodeInfo?.season_number || 1,
+      season_number: episodeInfo?.season_number ?? 1,
       totalepisode: (episodes?.length) || 1,
       description: episodeInfo?.overview || "",
       runtime: episodeInfo?.runtime || 1,
